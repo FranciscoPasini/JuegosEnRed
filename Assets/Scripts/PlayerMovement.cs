@@ -5,7 +5,7 @@ using Photon.Pun;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private int speed = 5;
-    [SerializeField] private TextMeshProUGUI nickNameUI;
+    [SerializeField] private TextMeshPro nickNameUI;
     private PhotonView photonView;
 
     private void Start()
