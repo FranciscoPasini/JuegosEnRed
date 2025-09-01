@@ -1,34 +1,42 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
+using TMPro;
 using UnityEngine;
 using Photon.Pun;
 
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private int speed = 5;
+    [SerializeField] private TextMeshProUGUI nickNameUI;
     private PhotonView photonView;
-    public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
 
-    public void Start()
+    private void Start()
     {
-       photonView = GetComponent<PhotonView>();
+        photonView = GetComponent<PhotonView>();
+
+        if (photonView.IsMine)
+        {
+            // Llamo solo en el mío para setear mi nombre
+            photonView.RPC("RPC_SetNickname", RpcTarget.AllBuffered, PlayerPrefs.GetString("playerNickname"));
+        }
     }
 
-    public void Update()
+    private void Update()
     {
-        Movement();
-    }
-
-    private void Movement()
-    {
-        if (PhotonView.IsMine)
+        if (photonView.IsMine)
         {
             float horizontal = Input.GetAxisRaw("Horizontal");
             float vertical = Input.GetAxisRaw("Vertical");
-
             Vector2 movement = new Vector2(horizontal, vertical);
-            transform.Translate(translation: movement.normalized * speed * Time.deltaTime);
+            transform.Translate(movement.normalized * speed * Time.deltaTime);
         }
+    }
+
+    [PunRPC]
+    public void RPC_SetNickname(string name)
+    {
+        Debug.Log("Set nickname: " + name);
+        if (nickNameUI != null)
+            nickNameUI.text = name;
+        else
+            Debug.LogError("nickNameUI no está asignado en el prefab!");
     }
 }

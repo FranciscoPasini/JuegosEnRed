@@ -13,7 +13,7 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
     public string gameSceneName;
     public TMP_InputField nickNameInputField;
     private const string nicknamekey = "playerNickname";
-    private string nickname;
+    public string nickname;
     public Button connectionButton;
 
     private void Start()
@@ -24,23 +24,23 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
 
     private void VerifyName(string name)
     {
-        if(nickNameInputField.text.Length == 0) 
+        if(nickNameInputField.text.Length == 0)  // si el nombre no tiene más de 0 letras tira error
         {
             connectionButton.interactable = false;
         }
 
-        if (nickNameInputField.text.Length >= 1 && !connectionButton.interactable)
+        if (nickNameInputField.text.Length >= 1 && !connectionButton.interactable)  // si tiene 1 o más tira true
         {
             connectionButton.interactable = true;
         }
 
-        nickname = name;
+        nickname = name;  // asigna nombre
     }
 
     public void HandleConnectButton()
     {
         PlayerPrefs.SetString(nicknamekey, nickname);
-        print(message:nickname + " is trying to conncet");
+        print(message:nickname + " is trying to connect");
         PhotonNetwork.ConnectUsingSettings();
 
         connectionButton.interactable = false;
