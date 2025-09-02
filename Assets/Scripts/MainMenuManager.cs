@@ -49,6 +49,7 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
     public void ExitButton()
     {
         Application.Quit();
+        UnityEditor.EditorApplication.isPlaying = false;
     }
 
     public override void OnConnectedToMaster()

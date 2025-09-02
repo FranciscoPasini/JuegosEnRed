@@ -189,7 +189,7 @@ GameObject:
   - component: {fileID: 94328002}
   - component: {fileID: 94328001}
   m_Layer: 5
-  m_Name: PlayButton
+  m_Name: Play Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -916,7 +916,7 @@ GameObject:
   - component: {fileID: 867035703}
   - component: {fileID: 867035702}
   m_Layer: 5
-  m_Name: NickNames
+  m_Name: NickNames InputField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1273,6 +1273,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameSceneName: Levels
   nickNameInputField: {fileID: 867035702}
+  nickname: 
   connectionButton: {fileID: 94328001}
 --- !u!1 &1151913890
 GameObject:
@@ -1852,8 +1853,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 72
+  m_fontSizeBase: 72
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
