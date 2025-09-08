@@ -34,9 +34,6 @@ public class PlayerMovement : MonoBehaviour
     public void RPC_SetNickname(string name)
     {
         Debug.Log("Set nickname: " + name);
-        if (nickNameUI != null)
-            nickNameUI.text = name;
-        else
-            Debug.LogError("nickNameUI no está asignado en el prefab!");
+        nickNameUI.text = name;
     }
 }

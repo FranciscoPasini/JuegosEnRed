@@ -54,12 +54,14 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log(nickname + " connected to server");
         SceneManager.LoadScene("Levels");
     }
 
     public void PlayButton()
     {
-        OnConnectedToMaster();
+        if (connectionButton.interactable == true)
+        {
+            OnConnectedToMaster();
+        }
     }
 }

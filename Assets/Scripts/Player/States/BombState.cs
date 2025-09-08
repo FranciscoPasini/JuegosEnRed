@@ -4,18 +4,9 @@ public class BombState : IPlayerState
 {
     public void Enter(PlayerStateController player)
     {
-        player.HasBomb = true;
+        // Cambiamos el color del SpriteRenderer a rojo
         player.GetComponent<SpriteRenderer>().color = Color.red;
     }
 
-    public void Update(PlayerStateController player)
-    {
-        // podría chequear colisiones o countdown
-    }
-
-    public void Exit(PlayerStateController player)
-    {
-        player.HasBomb = false;
-        player.GetComponent<SpriteRenderer>().color = Color.white;
-    }
+    public void Exit(PlayerStateController player) { }
 }

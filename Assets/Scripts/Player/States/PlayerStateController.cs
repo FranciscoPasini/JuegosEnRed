@@ -1,17 +1,18 @@
-using Photon.Pun;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
+using Photon.Realtime;
+using System.Collections.Generic;
 
-public class PlayerStateController : MonoBehaviour
+public class PlayerStateController : MonoBehaviourPun
 {
-    public bool HasBomb { get; set; }
     private IPlayerState currentState;
-    public PhotonView photonView;
 
-    private void Awake()
+    public PhotonView PhotonView => photonView;
+
+    private void Start()
     {
-        photonView = GetComponent<PhotonView>();
+        // Todos arrancan como normales
+        ChangeState(new NormalState());
     }
 
     public void ChangeState(IPlayerState newState)
@@ -23,17 +24,5 @@ public class PlayerStateController : MonoBehaviour
 
         if (currentState != null)
             currentState.Enter(this);
-
-        Debug.Log($"[{photonView.Owner.NickName}] cambió a estado {currentState.GetType().Name}");
-    }
-
-    private void Update()
-    {
-        currentState?.Update(this);
-    }
-
-    public void SetColor(Color c)
-    {
-        GetComponent<SpriteRenderer>().color = c;
     }
 }
