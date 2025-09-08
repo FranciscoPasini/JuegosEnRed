@@ -6,27 +6,18 @@ using System.Collections.Generic;
 public class PlayerStateController : MonoBehaviourPun
 {
     private IPlayerState currentState;
-    private SpriteRenderer spriteRenderer;
 
-    private void Awake()
-    {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-    }
-
-    private void Start()
-    {
-        // Todos empiezan normales
-        SetState(new NormalState());
-    }
-
-    public void SetState(IPlayerState newState)
+    public void ChangeState(IPlayerState newState)
     {
         if (currentState != null)
             currentState.Exit(this);
 
         currentState = newState;
+        currentState.Enter(this);
+    }
 
-        if (currentState != null)
-            currentState.Enter(this);
+    public void SetColor(Color color)
+    {
+        GetComponent<SpriteRenderer>().color = color;
     }
 }

@@ -2,37 +2,38 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections;
+using System.Collections.Generic;
 
-public class GameManager : MonoBehaviourPunCallbacks
+public class GameManager : MonoBehaviourPun
 {
-    private void Start()
+    private List<PlayerStateController> players = new List<PlayerStateController>();
+
+    void Start()
     {
+        // Buscar jugadores al inicio
+        players.AddRange(FindObjectsOfType<PlayerStateController>());
+
         if (PhotonNetwork.IsMasterClient)
-            StartCoroutine(AssignBombWithDelay());
+            Invoke(nameof(AssignBombToRandomPlayer), 10f); // después de 10 segundos
     }
 
-    private IEnumerator AssignBombWithDelay()
+    void AssignBombToRandomPlayer()
     {
-        yield return new WaitForSeconds(10f); // esperamos 10 segundos
+        if (players.Count == 0) return;
 
-        if (PhotonNetwork.PlayerList.Length == 0) yield break;
-
-        Player randomPlayer = PhotonNetwork.PlayerList[Random.Range(0, PhotonNetwork.PlayerList.Length)];
-        photonView.RPC("RPC_AssignBomb", RpcTarget.AllBuffered, randomPlayer.ActorNumber);
+        int randomIndex = Random.Range(0, players.Count);
+        photonView.RPC("RPC_AssignBomb", RpcTarget.All, players[randomIndex].photonView.ViewID);
     }
 
     [PunRPC]
-    private void RPC_AssignBomb(int actorNumber)
+    void RPC_AssignBomb(int playerViewId)
     {
-        // Se asegura de encontrar todos los PlayerStateController existentes
-        PlayerStateController[] players = FindObjectsOfType<PlayerStateController>();
+        var player = PhotonView.Find(playerViewId).GetComponent<PlayerStateController>();
 
-        foreach (var player in players)
+        if (player != null)
         {
-            if (player.photonView.Owner.ActorNumber == actorNumber)
-                player.SetState(new BombState());
-            else
-                player.SetState(new NormalState());
+            player.ChangeState(new BombState());
         }
     }
 }
+

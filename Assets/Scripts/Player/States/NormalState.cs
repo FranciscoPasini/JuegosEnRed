@@ -4,8 +4,7 @@ public class NormalState : IPlayerState
 {
     public void Enter(PlayerStateController player)
     {
-        // Cambiamos el color del SpriteRenderer a blanco
-        player.GetComponent<SpriteRenderer>().color = Color.white;
+        player.SetColor(Color.white); // jugador normal
     }
 
     public void Exit(PlayerStateController player) { }

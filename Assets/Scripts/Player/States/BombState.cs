@@ -4,8 +4,7 @@ public class BombState : IPlayerState
 {
     public void Enter(PlayerStateController player)
     {
-        // Cambiamos el color del SpriteRenderer a rojo
-        player.GetComponent<SpriteRenderer>().color = Color.red;
+        player.SetColor(Color.red); // jugador con bomba
     }
 
     public void Exit(PlayerStateController player) { }
