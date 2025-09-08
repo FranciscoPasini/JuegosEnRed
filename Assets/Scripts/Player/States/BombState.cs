@@ -2,19 +2,20 @@ using UnityEngine;
 
 public class BombState : IPlayerState
 {
-    public void Enter(PlayerController player)
+    public void Enter(PlayerStateController player)
     {
         player.HasBomb = true;
-        player.SetColor(Color.red); // visual para indicar bomba
+        player.GetComponent<SpriteRenderer>().color = Color.red;
     }
 
-    public void Update(PlayerController player)
+    public void Update(PlayerStateController player)
     {
         // podría chequear colisiones o countdown
     }
 
-    public void Exit(PlayerController player)
+    public void Exit(PlayerStateController player)
     {
         player.HasBomb = false;
+        player.GetComponent<SpriteRenderer>().color = Color.white;
     }
 }

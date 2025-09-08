@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using Photon.Pun;
 using TMPro; // si usas TextMeshPro
 
-public class BombTimer : MonoBehaviourPunCallbacks
+public class Timer : MonoBehaviourPunCallbacks
 {
     public double countdownTime = 10.0; // segundos de duración
     private double endTime;
