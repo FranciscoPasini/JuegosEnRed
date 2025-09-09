@@ -4,7 +4,8 @@ public class BombState : IPlayerState
 {
     public void Enter(PlayerStateController player)
     {
-        player.SetColor(Color.red); // jugador con bomba
+        Debug.Log($"[{player.name}] Enter BombState");
+        player.SetColor(Color.red);
     }
 
     public void Exit(PlayerStateController player) { }

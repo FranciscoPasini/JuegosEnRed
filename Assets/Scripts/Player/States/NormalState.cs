@@ -4,7 +4,8 @@ public class NormalState : IPlayerState
 {
     public void Enter(PlayerStateController player)
     {
-        player.SetColor(Color.white); // jugador normal
+        Debug.Log($"[{player.name}] Enter NormalState");
+        player.SetColor(Color.white);
     }
 
     public void Exit(PlayerStateController player) { }

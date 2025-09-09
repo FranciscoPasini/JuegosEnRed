@@ -13,7 +13,8 @@ public class GameStarter : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private Transform spawnPoint;
     private int currentSpawnIndex = 0;
-    public MainMenuManager mainMenuManager { get; set; }
+    private MainMenuManager mainMenuManager;
+
 
     private void Start()
     {
