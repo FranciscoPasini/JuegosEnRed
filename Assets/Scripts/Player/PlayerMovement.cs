@@ -27,6 +27,11 @@ public class PlayerMovement : MonoBehaviour
             float vertical = Input.GetAxisRaw("Vertical");
             Vector2 movement = new Vector2(horizontal, vertical);
             transform.Translate(movement.normalized * speed * Time.deltaTime);
+
+           /* if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
+            {
+                
+            }*/
         }
     }
 

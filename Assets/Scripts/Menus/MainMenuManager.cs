@@ -55,11 +55,6 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         nickname = name;  // asigna nombre
     }
 
-    public override void OnJoinedRoom() //cuando nos conecta a la room, nos carga la escena
-    {
-        Debug.Log("Joined room: " + PhotonNetwork.CurrentRoom.Name);
-        SceneManager.LoadScene("Levels");
-    }
     public void ConnectionPhoton() // nos conecta al photon despues de ingresar el nombre
     {
         PlayerPrefs.SetString(nicknamekey, nickname);
@@ -92,6 +87,11 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
     public void JoinRoom (RoomInfo info) // nos une al lobby que queremos al ingresar el nombre
     {
         PhotonNetwork.JoinRoom(info.Name);
+    }
+    public override void OnJoinedRoom() //cuando nos conecta a la room, nos carga la escena
+    {
+        Debug.Log("Joined room: " + PhotonNetwork.CurrentRoom.Name);
+        SceneManager.LoadScene("Levels");
     }
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList) //metodo para la lista de servidores aparezcan en el menu

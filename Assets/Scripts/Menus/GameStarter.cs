@@ -9,9 +9,15 @@ public class GameStarter : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private Transform spawnPoint;
 
-    [SerializeField] private Transform playerListContent;
-    [SerializeField] private GameObject playerListItemPrefab;
-    [SerializeField] private GameObject startPanel;
+    public Transform playerListContent;
+    public GameObject playerListItemPrefab;
+
+    public GameObject startPanel;
+
+    public void Awake()
+    {
+        RefreshPlayerList();
+    }
 
     public void StartMatch()
     {
@@ -30,26 +36,13 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
         foreach (Player p in PhotonNetwork.PlayerList)
         {
-            AddPlayerToList(p);
+            OnPlayerEnteredRoom(p);
         }
-    }
-
-    private void AddPlayerToList(Player player)
-    {
-        GameObject obj = Instantiate(playerListItemPrefab, playerListContent);
-        obj.GetComponent<PlayerListItem>().SetUp(player);
-    }
-
-    public override void OnJoinedRoom()
-    {
-        Debug.Log("Entraste a la sala: " + PhotonNetwork.CurrentRoom.Name);
-        RefreshPlayerList();
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        Debug.Log(newPlayer.NickName + " entró al server");
-        AddPlayerToList(newPlayer);
+        Instantiate(playerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer); //creamos, el prefabPlayerItem, lista de nuestros player, agregamos nuestro PlayerListitem.cs y llamamos a nuestro setUp para agregar a las listas
     }
 
     public void LeaveRoom()

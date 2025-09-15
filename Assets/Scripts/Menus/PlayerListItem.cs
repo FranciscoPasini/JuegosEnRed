@@ -6,13 +6,13 @@ using UnityEngine;
 public class PlayerListItem : MonoBehaviourPunCallbacks
 {
     [SerializeField] TMP_Text text;
-    private Player player;
+    MainMenuManager mainMenuManager;
+    Player player;
 
     // Configurar el item con los datos del jugador
-    public void SetUp(Player _player)
+    public void SetUp(Player player)
     {
-        player = _player;
-        text.text = _player.NickName;
+        text.text = mainMenuManager.nickname;
     }
 
     // Cuando un jugador abandona la sala
