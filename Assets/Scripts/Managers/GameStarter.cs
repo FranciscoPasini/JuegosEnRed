@@ -16,6 +16,12 @@ public class GameStarter : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject playButton;
     private bool hasSpawned = false;
 
+    GameManager gameManager;
+    public void Awake()
+    {
+        RefreshPlayerList();
+    }
+
     private void OnEnable()
     {
         if (startPanel != null)
@@ -23,11 +29,6 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
         if (playButton != null)
             playButton.SetActive(PhotonNetwork.IsMasterClient);
-    }
-
-    public override void OnJoinedRoom()
-    {
-        RefreshPlayerList();
     }
 
     public void StartMatch()
