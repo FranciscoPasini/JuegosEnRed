@@ -54,13 +54,10 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         nickname = name;  // asigna nombre
     }
 
-    public override void OnJoinedRoom() //habilita que se pueda ingresar a photon
+    public override void OnJoinedRoom()
     {
-        if (connectionButton.interactable == true)
-        {
-            ConnectionPhoton();
-        }
-
+        Debug.Log("Joined room: " + PhotonNetwork.CurrentRoom.Name);
+        SceneManager.LoadScene("Levels");
     }
     public void ConnectionPhoton() // nos conecta al master despues de ingresar el nombre
     {
@@ -73,8 +70,9 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster() // lo que hace ni bien nos conecta al server
     {
-        OpenPanel(setRoomsPanel); ; // abre el panel de setRooms
         Debug.Log(nickname + " is connected");
+        PhotonNetwork.JoinLobby(); // Te suscribís al lobby para recibir la lista de rooms
+        OpenPanel(setRoomsPanel); ; // abre el panel de setRooms
     }
 
     public void CreateRoom()
@@ -83,8 +81,11 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         {
             return;
         }
-        PhotonNetwork.CreateRoom(roomNameInputField.text);
-        SceneManager.LoadScene("Levels");
+
+        RoomOptions options = new RoomOptions();
+        options.MaxPlayers = 20;
+
+        PhotonNetwork.CreateRoom(roomNameInputField.text, options);
     }
 
     public void JoinRoom (RoomInfo info) // nos une al lobby que queremos al ingresar el nombre
@@ -94,21 +95,24 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        foreach (Transform transform in roomListContent)  //actualiza la lista borrando
+        foreach (Transform child in roomListContent)
         {
-            Destroy(transform.gameObject);
+            Destroy(child.gameObject); // limpiar lista vieja
         }
 
-        for (int i = 0; i < roomList.Count; i++) 
+        foreach (RoomInfo room in roomList)
         {
-            Instantiate(roomListItemPrefab, roomListContent).GetComponent<RoomlistPrefab>().SetUp(roomList[i]); //creamos, el prefabRoonItem, lista de nuestras rooms, agregamos nuestro Roomlistprefab.cs y llamamos a nuestro setUp para agregar a las listas
+            if (room.RemovedFromList) continue; // no mostrar rooms cerradas
+
+            Instantiate(roomListItemPrefab, roomListContent)
+                .GetComponent<RoomlistPrefab>()
+                .SetUp(room);
         }
     }
 
     public void ExitButton()
     {
         Application.Quit();
-        UnityEditor.EditorApplication.isPlaying = false;
     }
 
     public void OpenPanel(GameObject panel)
