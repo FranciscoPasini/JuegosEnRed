@@ -1,35 +1,70 @@
-using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
-using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using Unity.VisualScripting;
 
 public class GameStarter : MonoBehaviourPunCallbacks
 {
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private Transform spawnPoint;
-    private int currentSpawnIndex = 0;
-    private MainMenuManager mainMenuManager;
 
+    [SerializeField] private Transform playerListContent;
+    [SerializeField] private GameObject playerListItemPrefab;
+    [SerializeField] private GameObject startPanel;
 
-    private void Start()
+    public void StartMatch()
     {
-        
+        GameObject player = PhotonNetwork.Instantiate(playerPrefab.name,spawnPoint.position,spawnPoint.rotation);
+        player.GetComponent<PhotonView>().RPC("RPC_SetNickname",RpcTarget.AllBuffered,PlayerPrefs.GetString("playerNickname"));
+
+        ClosePanel(startPanel);
+    }
+
+    private void RefreshPlayerList()
+    {
+        foreach (Transform child in playerListContent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        foreach (Player p in PhotonNetwork.PlayerList)
+        {
+            AddPlayerToList(p);
+        }
+    }
+
+    private void AddPlayerToList(Player player)
+    {
+        GameObject obj = Instantiate(playerListItemPrefab, playerListContent);
+        obj.GetComponent<PlayerListItem>().SetUp(player);
     }
 
     public override void OnJoinedRoom()
     {
-        GameObject player = PhotonNetwork.Instantiate(playerPrefab.name,spawnPoint.position,spawnPoint.rotation); // crea el prefab del jugador, lo instancia, le asigna la posicion, y la rotacion
-        player.GetComponent<PhotonView>().RPC(methodName: "RPC_SetNickname", RpcTarget.AllBuffered, PlayerPrefs.GetString(key: "playerNickname")); //se declara el metodo que vamos a usar (RPC_SetNickname), RpcTarget es a quien le voy a mandar la información, el all significa a quienes le llegan y el buffered es que también le llegue a los jugadores que ingresaron después al servidor, y finalmente sus parámetros
+        Debug.Log("Entraste a la sala: " + PhotonNetwork.CurrentRoom.Name);
+        RefreshPlayerList();
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        mainMenuManager.nickname = newPlayer.NickName;
-        print(message: newPlayer.NickName + " entro al server");
+        Debug.Log(newPlayer.NickName + " entró al server");
+        AddPlayerToList(newPlayer);
+    }
+
+    public void LeaveRoom()
+    {
+        PhotonNetwork.LeaveRoom();
+    }
+
+    public override void OnLeftRoom()
+    {
+        Debug.Log("Saliste de la sala");
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    private void ClosePanel(GameObject panel)
+    {
+        panel.SetActive(false);
     }
 }
