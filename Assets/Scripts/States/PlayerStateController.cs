@@ -98,6 +98,7 @@ public class PlayerStateController : MonoBehaviourPun
 
         if (PhotonNetwork.IsMasterClient)
         {
+            GameManager.Instance.CheckWinner(); //verificar si queda solo uno
             GameManager.Instance.Invoke(nameof(GameManager.Instance.AssignBombAfterDelay), 3f);
         }
     }
