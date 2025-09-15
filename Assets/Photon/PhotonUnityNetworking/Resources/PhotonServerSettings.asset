@@ -45,6 +45,10 @@ MonoBehaviour:
   - SyncTimer
   - RPC_GiveBomb
   - RPC_AssignBomb
+  - RPC_OnDie
+  - RequestTransfer
+  - RPC_Die
+  - RPC_PassBomb
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

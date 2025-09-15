@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
-    private void AssignBombAfterDelay()
+    public void AssignBombAfterDelay()
     {
         Debug.Log("AssignBombAfterDelay called.");
         if (players.Count == 0)
