@@ -121,6 +121,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pv: {fileID: 0}
+  bombIndicator: {fileID: 0}
 --- !u!50 &2991739977518128573
 Rigidbody2D:
   serializedVersion: 4

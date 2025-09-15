@@ -2,11 +2,16 @@ using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using TMPro;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
     public static GameManager Instance;
     private readonly List<PlayerStateController> players = new List<PlayerStateController>();
+
+    [SerializeField] private TMP_Text TimerText;
+    private float currentTime = 0f;
+    private bool isCounting = false;
 
     private void Awake()
     {
@@ -16,6 +21,15 @@ public class GameManager : MonoBehaviourPunCallbacks
         Debug.Log("GameManager Awake");
     }
 
+    private void Update()
+    {
+        if (!isCounting) return;
+
+        currentTime -= Time.deltaTime;
+        if (currentTime < 0f) currentTime = 0f;
+
+        TimerText.text = Mathf.CeilToInt(currentTime).ToString();
+    }
 
     public void BeginMatch()
     {
@@ -67,6 +81,26 @@ public class GameManager : MonoBehaviourPunCallbacks
         photonView.RPC("RPC_AssignBomb", RpcTarget.AllBuffered, actorNumber);
     }
 
+    public void StartBombTimer(float duration)
+    {
+        currentTime = duration;
+        isCounting = true;
+        if (TimerText != null)
+        {
+            TimerText.gameObject.SetActive(true);
+        }
+    }
+
+    public void StopBombTimer()
+    {
+        isCounting = false;
+        if (TimerText != null)
+        {
+            TimerText.text = "";
+            TimerText.gameObject.SetActive(false);
+        }
+    }
+
     [PunRPC]
     private void RPC_AssignBomb(int actorNumber)
     {
@@ -78,9 +112,15 @@ public class GameManager : MonoBehaviourPunCallbacks
             int ownerActor = (p.pv.Owner != null) ? p.pv.Owner.ActorNumber : -1;
             Debug.Log($" - checking {p.name} ownerActor={ownerActor}");
             if (ownerActor == actorNumber)
+            {
                 p.ChangeState(new BombState());
+                StartBombTimer(10f);
+            }
+
             else
+            {
                 p.ChangeState(new NormalState());
+            }
         }
     }
 }
