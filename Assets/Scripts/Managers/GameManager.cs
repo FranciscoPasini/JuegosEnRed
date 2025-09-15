@@ -81,7 +81,33 @@ public class GameManager : MonoBehaviourPunCallbacks
         photonView.RPC("RPC_AssignBomb", RpcTarget.AllBuffered, actorNumber);
     }
 
-    public void StartBombTimer(float duration)
+    public void CheckWinner()
+    {
+        int alivePlayers = 0;
+        PlayerStateController lastPlayer = null;
+
+        foreach (var p in players)
+        {
+            if (p.gameObject.activeSelf)
+            {
+                alivePlayers++;
+                lastPlayer = p;
+            }
+        }
+
+        if (alivePlayers == 1 && lastPlayer != null)
+        {
+            Debug.Log($"Ganador: {lastPlayer.name}");
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                //  Reinicia la escena sincronizadamente
+                PhotonNetwork.LoadLevel("Levels");
+            }
+        }
+    }
+
+public void StartBombTimer(float duration)
     {
         currentTime = duration;
         isCounting = true;

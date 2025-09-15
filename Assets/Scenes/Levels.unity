@@ -526,7 +526,7 @@ MonoBehaviour:
   playerListContent: {fileID: 1454537887}
   playerListItemPrefab: {fileID: 8630708700182125046, guid: 9e214a5b2fa059b41bc80b03d0023a78, type: 3}
   startPanel: {fileID: 50041264}
-  playButton: {fileID: 1810073932}
+  playButton: {fileID: 1810073930}
 --- !u!114 &287392898
 MonoBehaviour:
   m_ObjectHideFlags: 0
