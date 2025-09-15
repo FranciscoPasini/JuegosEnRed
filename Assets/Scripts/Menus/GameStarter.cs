@@ -18,7 +18,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        PhotonNetwork.JoinRandomOrCreateRoom(); // al iniciar la escena crea la sala del servidor
+        
     }
 
     public override void OnJoinedRoom()
