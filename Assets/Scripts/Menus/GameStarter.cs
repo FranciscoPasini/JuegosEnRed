@@ -3,6 +3,7 @@ using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameStarter : MonoBehaviourPunCallbacks
 {
@@ -13,6 +14,8 @@ public class GameStarter : MonoBehaviourPunCallbacks
     public GameObject playerListItemPrefab;
 
     public GameObject startPanel;
+    [SerializeField] private Button playButton;
+    private bool hasSpawned = false;
 
     public void Awake()
     {
@@ -21,10 +24,18 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     public void StartMatch()
     {
+        if (hasSpawned) //evite que se duplique el jugador cuando se vuelve tocar al playButton
+        {
+            return;
+        }
+
         GameObject player = PhotonNetwork.Instantiate(playerPrefab.name,spawnPoint.position,spawnPoint.rotation);
         player.GetComponent<PhotonView>().RPC("RPC_SetNickname",RpcTarget.AllBuffered,PlayerPrefs.GetString("playerNickname"));
 
         ClosePanel(startPanel);
+
+        hasSpawned = true;
+        playButton.interactable = false;
     }
 
     private void RefreshPlayerList()

@@ -6,13 +6,13 @@ using UnityEngine;
 public class PlayerListItem : MonoBehaviourPunCallbacks
 {
     [SerializeField] TMP_Text text;
-    MainMenuManager mainMenuManager;
-    Player player;
+    private Player player;
 
     // Configurar el item con los datos del jugador
-    public void SetUp(Player player)
+    public void SetUp(Player _player)
     {
-        text.text = mainMenuManager.nickname;
+        player = _player;
+        text.text = _player.NickName; // Usamos el nickname que Photon ya guarda
     }
 
     // Cuando un jugador abandona la sala

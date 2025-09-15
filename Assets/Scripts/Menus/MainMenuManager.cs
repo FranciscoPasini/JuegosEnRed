@@ -59,6 +59,7 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
     {
         PlayerPrefs.SetString(nicknamekey, nickname);
         print(message:nickname + " is trying to connect");
+        PhotonNetwork.NickName = nickname;
         PhotonNetwork.ConnectUsingSettings();
 
         connectionButton.interactable = false;
