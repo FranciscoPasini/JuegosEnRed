@@ -49,6 +49,7 @@ MonoBehaviour:
   - RequestTransfer
   - RPC_Die
   - RPC_PassBomb
+  - RPC_StartMatchForAll
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

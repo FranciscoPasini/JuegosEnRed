@@ -1,6 +1,5 @@
 using Photon.Pun;
 using Photon.Realtime;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -24,13 +23,19 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     public void StartMatch()
     {
-        if (hasSpawned) //evite que se duplique el jugador cuando se vuelve tocar al playButton
+        if (PhotonNetwork.IsMasterClient) // solo el host puede iniciar
         {
-            return;
+            photonView.RPC("RPC_StartMatchForAll", RpcTarget.AllBuffered);
         }
+    }
 
-        GameObject player = PhotonNetwork.Instantiate(playerPrefab.name,spawnPoint.position,spawnPoint.rotation);
-        player.GetComponent<PhotonView>().RPC("RPC_SetNickname",RpcTarget.AllBuffered,PlayerPrefs.GetString("playerNickname"));
+    [PunRPC]
+    private void RPC_StartMatchForAll()
+    {
+        if (hasSpawned) return; // evitar duplicados
+
+        GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
+        player.GetComponent<PhotonView>().RPC("RPC_SetNickname", RpcTarget.AllBuffered, PlayerPrefs.GetString("playerNickname"));
 
         ClosePanel(startPanel);
 
@@ -53,7 +58,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        Instantiate(playerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer); //creamos, el prefabPlayerItem, lista de nuestros player, agregamos nuestro PlayerListitem.cs y llamamos a nuestro setUp para agregar a las listas
+        Instantiate(playerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer);
     }
 
     public void LeaveRoom()
