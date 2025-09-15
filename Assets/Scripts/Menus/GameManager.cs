@@ -16,7 +16,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         Debug.Log("GameManager Awake");
     }
 
-    private void Start()
+
+    public void BeginMatch()
     {
         Debug.Log($"GameManager Start - IsMasterClient: {PhotonNetwork.IsMasterClient}");
 

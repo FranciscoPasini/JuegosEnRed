@@ -16,6 +16,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
     [SerializeField] private Button playButton;
     private bool hasSpawned = false;
 
+    GameManager gameManager;
     public void Awake()
     {
         RefreshPlayerList();
@@ -26,7 +27,8 @@ public class GameStarter : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient) // solo el host puede iniciar
         {
             photonView.RPC("RPC_StartMatchForAll", RpcTarget.AllBuffered);
-        }
+            
+        }  
     }
 
     [PunRPC]
@@ -41,6 +43,11 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
         hasSpawned = true;
         playButton.interactable = false;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.BeginMatch();
+        }
     }
 
     private void RefreshPlayerList()
