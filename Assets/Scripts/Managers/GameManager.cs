@@ -101,8 +101,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
             if (PhotonNetwork.IsMasterClient)
             {
-                //  Reinicia la escena sincronizadamente
-                PhotonNetwork.LoadLevel("Levels");
+                photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
             }
         }
     }
@@ -149,4 +148,11 @@ public void StartBombTimer(float duration)
             }
         }
     }
+
+    [PunRPC]
+    private void RPC_RestartMatch()
+    {
+        PhotonNetwork.LoadLevel("Levels");
+    }
+
 }

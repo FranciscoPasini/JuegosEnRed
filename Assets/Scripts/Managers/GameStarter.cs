@@ -22,10 +22,13 @@ public class GameStarter : MonoBehaviourPunCallbacks
         RefreshPlayerList();
     }
 
-    public void Start()
+    private void OnEnable()
     {
-        startPanel.SetActive(true);
-        playButton.SetActive(true);
+        if (startPanel != null)
+            startPanel.SetActive(true);
+
+        if (playButton != null)
+            playButton.SetActive(PhotonNetwork.IsMasterClient);
     }
 
     public void StartMatch()
