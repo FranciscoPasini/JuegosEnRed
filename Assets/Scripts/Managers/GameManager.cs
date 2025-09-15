@@ -83,7 +83,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public void CheckWinner()
     {
-        int alivePlayers = 0;
+        int alivePlayers = 1;
         PlayerStateController lastPlayer = null;
 
         foreach (var p in players)
