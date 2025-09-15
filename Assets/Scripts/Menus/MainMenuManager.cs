@@ -35,7 +35,7 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        connectionButton.onClick.AddListener(OnJoinedRoom); // en el inputfield agrega el metodo OnJoinedRoom
+        connectionButton.onClick.AddListener(ConnectionPhoton); // en el inputfield agrega el metodo ConnectionPhoton
         nickNameInputField.onValueChanged.AddListener(VerifyName);
     }
 
