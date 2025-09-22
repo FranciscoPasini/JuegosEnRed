@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class GameStarter : MonoBehaviourPunCallbacks
 {
+    public static GameStarter Instance;
+
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private Transform spawnPoint;
 
@@ -18,6 +20,11 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     GameManager gameManager;
     public void Awake()
+    {
+        RefreshPlayerList();
+    }
+
+    public void Update()
     {
         RefreshPlayerList();
     }
@@ -41,25 +48,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
         }  
     }
 
-    [PunRPC]
-    private void RPC_StartMatchForAll()
-    {
-        if (hasSpawned) return; // evitar duplicados
-
-        GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
-        player.GetComponent<PhotonView>().RPC("RPC_SetNickname", RpcTarget.AllBuffered, PlayerPrefs.GetString("playerNickname"));
-
-        ClosePanel(startPanel);
-
-        hasSpawned = true;
-
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.BeginMatch();
-        }
-    }
-
-    private void RefreshPlayerList()
+    public void RefreshPlayerList()
     {
         foreach (Transform child in playerListContent)
         {
@@ -80,16 +69,29 @@ public class GameStarter : MonoBehaviourPunCallbacks
     public void LeaveRoom()
     {
         PhotonNetwork.LeaveRoom();
-    }
-
-    public override void OnLeftRoom()
-    {
-        Debug.Log("Saliste de la sala");
         SceneManager.LoadScene("MainMenu");
     }
 
     private void ClosePanel(GameObject panel)
     {
         panel.SetActive(false);
+    }
+
+    [PunRPC]
+    private void RPC_StartMatchForAll()
+    {
+        if (hasSpawned) return; // evitar duplicados
+
+        GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
+        player.GetComponent<PhotonView>().RPC("RPC_SetNickname", RpcTarget.AllBuffered, PlayerPrefs.GetString("playerNickname"));
+
+        ClosePanel(startPanel);
+
+        hasSpawned = true;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.BeginMatch();
+        }
     }
 }

@@ -50,6 +50,7 @@ MonoBehaviour:
   - RPC_Die
   - RPC_PassBomb
   - RPC_StartMatchForAll
+  - RPC_RestartMatch
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

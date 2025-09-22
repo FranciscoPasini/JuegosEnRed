@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private TMP_Text TimerText;
     private float currentTime = 0f;
     private bool isCounting = false;
+    GameStarter gameStarter;
 
     private void Awake()
     {
@@ -22,6 +23,11 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     private void Update()
+    {
+        Timer();
+    }
+
+    public void Timer()
     {
         if (!isCounting) return;
 
