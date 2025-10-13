@@ -38,7 +38,7 @@ public class PlayerStateController : MonoBehaviourPun
         }
 
         Debug.Log($"[{name}] Registering with GameManager. Owner: {(pv.Owner != null ? pv.Owner.NickName : "null")}, Actor: {(pv.Owner != null ? pv.Owner.ActorNumber : -1)}");
-        GameManager.Instance.RegisterPlayer(this);
+        //GameManager.Instance.RegisterPlayer(this);
 
         ChangeState(new NormalState());
     }
@@ -98,8 +98,8 @@ public class PlayerStateController : MonoBehaviourPun
 
         if (PhotonNetwork.IsMasterClient)
         {
-            GameManager.Instance.CheckWinner(); //verificar si queda solo uno
-            GameManager.Instance.Invoke(nameof(GameManager.Instance.AssignBombAfterDelay), 3f);
+            //GameManager.Instance.CheckWinner(); //verificar si queda solo uno
+            //GameManager.Instance.Invoke(nameof(GameManager.Instance.AssignBombAfterDelay), 3f);
         }
     }
 

@@ -1,164 +1,126 @@
 using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
     public static GameManager Instance;
-    private readonly List<PlayerStateController> players = new List<PlayerStateController>();
 
-    [SerializeField] private TMP_Text TimerText;
-    private float currentTime = 0f;
-    private bool isCounting = false;
-    GameStarter gameStarter;
+    [Header("Prefabs")]
+    [SerializeField] private GameObject ballPrefab; // assign ball prefab
+
+    [Header("UI")]
+    [SerializeField] private TMP_Text scoreText;    // "0 - 0"
+    [SerializeField] private TMP_Text infoText;     // opcional: mensajes
+
+    private int scoreTeam1 = 0;
+    private int scoreTeam2 = 0;
+
+    private GameObject currentBall;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
-
-        Debug.Log("GameManager Awake");
-    }
-
-    private void Update()
-    {
-        Timer();
-    }
-
-    public void Timer()
-    {
-        if (!isCounting) return;
-
-        currentTime -= Time.deltaTime;
-        if (currentTime < 0f) currentTime = 0f;
-
-        TimerText.text = Mathf.CeilToInt(currentTime).ToString();
     }
 
     public void BeginMatch()
     {
-        Debug.Log($"GameManager Start - IsMasterClient: {PhotonNetwork.IsMasterClient}");
+        // solo MasterClient decide spawnear la pelota inicial
+        if (!PhotonNetwork.IsMasterClient) return;
+        SpawnBall();
+    }
 
-        // Solo el MasterClient decide la asignación inicial
+    // MasterClient spawnea la pelota de sala - usar InstantiateRoomObject si disponible
+    [PunRPC]
+    private void RPC_SpawnBallNetworked()
+    {
+        // fallback local (no debería llamarse por no-master)
+        if (currentBall != null) Destroy(currentBall);
+        currentBall = Instantiate(ballPrefab, Vector3.zero, Quaternion.identity);
+    }
+
+    public void SpawnBall()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        // Destruir pelota vieja en la red (si existe)
+        if (currentBall != null)
+        {
+            PhotonNetwork.Destroy(currentBall.GetComponent<PhotonView>());
+            currentBall = null;
+        }
+
+        // Preferible: PhotonNetwork.InstantiateRoomObject (si disponible). Si no, PhotonNetwork.Instantiate desde el master:
+#if PUN_2_OR_NEWER
+        // Intenta InstantiateRoomObject (recomendada para objetos de sala)
+        try
+        {
+            currentBall = PhotonNetwork.InstantiateRoomObject(ballPrefab.name, Vector3.zero, Quaternion.identity);
+        }
+        catch
+        {
+            // fallback si no existe método o hay error
+            currentBall = PhotonNetwork.Instantiate(ballPrefab.name, Vector3.zero, Quaternion.identity);
+        }
+#else
+        currentBall = PhotonNetwork.Instantiate(ballPrefab.name, Vector3.zero, Quaternion.identity);
+#endif
+
+        // Actualizamos UI
+        UpdateScoreUI();
+        if (infoText != null) infoText.text = "";
+    }
+
+    // Llamar cuando un equipo anota
+    public void AddScore(int team)
+    {
+        if (!PhotonNetwork.IsMasterClient) return; // que lo maneje el master
+
+        if (team == 1) scoreTeam1++;
+        else scoreTeam2++;
+
+        UpdateScoreUI();
+
+        // comprobar victoria
+        if (scoreTeam1 >= 5 || scoreTeam2 >= 5)
+        {
+            photonView.RPC(nameof(RPC_EndGame), RpcTarget.AllBuffered, scoreTeam1, scoreTeam2);
+        }
+        else
+        {
+            // reinicia ronda tras 1s
+            Invoke(nameof(SpawnBall), 1f);
+        }
+    }
+
+    private void UpdateScoreUI()
+    {
+        if (scoreText != null)
+            scoreText.text = $"{scoreTeam1} - {scoreTeam2}";
+    }
+
+    [PunRPC]
+    private void RPC_EndGame(int s1, int s2)
+    {
+        // Mostrar resultado y reiniciar escena para todos (master hace LoadLevel)
+        if (infoText != null)
+        {
+            int winner = s1 > s2 ? 1 : 2;
+            infoText.text = $"¡Equipo {winner} ganó! Reiniciando...";
+        }
+
         if (PhotonNetwork.IsMasterClient)
         {
-            Invoke(nameof(AssignBombAfterDelay), 10f);
-            Debug.Log("MasterClient scheduled AssignBombAfterDelay(10s)");
+            // reset scores
+            scoreTeam1 = 0;
+            scoreTeam2 = 0;
+            UpdateScoreUI();
+
+            // Cargar escena Levels para reiniciar y mostrar StartPanel otra vez
+            PhotonNetwork.LoadLevel("Levels");
         }
     }
-
-    public void RegisterPlayer(PlayerStateController player)
-    {
-        if (!players.Contains(player))
-        {
-            players.Add(player);
-            Debug.Log($"Registered player: {player.name} (actor:{(player.pv.Owner != null ? player.pv.Owner.ActorNumber : -1)}) total:{players.Count}");
-        }
-    }
-
-    public void UnregisterPlayer(PlayerStateController player)
-    {
-        if (players.Remove(player))
-        {
-            Debug.Log($"Unregistered player: {player.name}. remaining:{players.Count}");
-        }
-    }
-
-    public void AssignBombAfterDelay()
-    {
-        Debug.Log("AssignBombAfterDelay called.");
-        if (players.Count == 0)
-        {
-            Debug.LogWarning("No players registered in GameManager.players. Falling back to PhotonNetwork.PlayerList.");
-            if (PhotonNetwork.PlayerList.Length > 0)
-            {
-                Player random = PhotonNetwork.PlayerList[Random.Range(0, PhotonNetwork.PlayerList.Length)];
-                photonView.RPC("RPC_AssignBomb", RpcTarget.AllBuffered, random.ActorNumber);
-            }
-            return;
-        }
-
-        int idx = Random.Range(0, players.Count);
-        PlayerStateController chosen = players[idx];
-        int actorNumber = chosen.pv.Owner != null ? chosen.pv.Owner.ActorNumber : -1;
-        Debug.Log($"Chosen local player: {chosen.name}, actor: {actorNumber}");
-        photonView.RPC("RPC_AssignBomb", RpcTarget.AllBuffered, actorNumber);
-    }
-
-    public void CheckWinner()
-    {
-        int alivePlayers = 0;
-        PlayerStateController lastPlayer = null;
-
-        foreach (var p in players)
-        {
-            if (p.gameObject.activeSelf)
-            {
-                alivePlayers++;
-                lastPlayer = p;
-            }
-        }
-
-        if (alivePlayers == 1 && lastPlayer != null)
-        {
-            Debug.Log($"Ganador: {lastPlayer.name}");
-
-            if (PhotonNetwork.IsMasterClient)
-            {
-                photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
-            }
-        }
-    }
-
-public void StartBombTimer(float duration)
-    {
-        currentTime = duration;
-        isCounting = true;
-        if (TimerText != null)
-        {
-            TimerText.gameObject.SetActive(true);
-        }
-    }
-
-    public void StopBombTimer()
-    {
-        isCounting = false;
-        if (TimerText != null)
-        {
-            TimerText.text = "";
-            TimerText.gameObject.SetActive(false);
-        }
-    }
-
-    [PunRPC]
-    private void RPC_AssignBomb(int actorNumber)
-    {
-        Debug.Log($"RPC_AssignBomb received on client. actorNumber={actorNumber}");
-        // Recorremos los PlayerStateController que están en esta escena/local client
-        var localPlayers = FindObjectsOfType<PlayerStateController>();
-        foreach (var p in localPlayers)
-        {
-            int ownerActor = (p.pv.Owner != null) ? p.pv.Owner.ActorNumber : -1;
-            Debug.Log($" - checking {p.name} ownerActor={ownerActor}");
-            if (ownerActor == actorNumber)
-            {
-                p.ChangeState(new BombState());
-                StartBombTimer(10f);
-            }
-
-            else
-            {
-                p.ChangeState(new NormalState());
-            }
-        }
-    }
-
-    [PunRPC]
-    private void RPC_RestartMatch()
-    {
-        PhotonNetwork.LoadLevel("Levels");
-    }
-
 }

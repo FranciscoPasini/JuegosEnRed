@@ -1,32 +1,15 @@
-using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 
-public class PlayerListItem : MonoBehaviourPunCallbacks
+public class PlayerListItem : MonoBehaviour
 {
-    [SerializeField] TMP_Text text;
+    [SerializeField] private TMP_Text text;
     private Player player;
 
-    // Configurar el item con los datos del jugador
-    public void SetUp(Player _player)
+    public void SetUp(Player p)
     {
-        player = _player;
-        text.text = _player.NickName; // Usamos el nickname que Photon ya guarda
-    }
-
-    // Cuando un jugador abandona la sala
-    public override void OnPlayerLeftRoom(Player otherPlayer)
-    {
-        if (player == otherPlayer)
-        {
-            Destroy(gameObject);
-        }
-    }
-
-    // Cuando nosotros mismos salimos de la sala
-    public override void OnLeftRoom()
-    {
-        Destroy(gameObject);
+        player = p;
+        if (text != null) text.text = p.NickName;
     }
 }
