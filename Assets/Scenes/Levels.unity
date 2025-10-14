@@ -721,8 +721,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a5630f8ad8d00848af961c5d80d700e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  paddlePrefab: {fileID: 9137472688319202879, guid: 33879db30268e2242a46152471b72590, type: 3}
-  ballPrefab: {fileID: 1890582945537865258, guid: 4e350c59bc402e345a94d674fe7369c1, type: 3}
+  PaddlePrefab: {fileID: 9137472688319202879, guid: 33879db30268e2242a46152471b72590, type: 3}
+  BallPrefab: {fileID: 1890582945537865258, guid: 4e350c59bc402e345a94d674fe7369c1, type: 3}
   spawnPoints:
   - {fileID: 806921441}
   - {fileID: 957593500}
@@ -895,8 +895,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a5630f8ad8d00848af961c5d80d700e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  paddlePrefab: {fileID: 0}
-  ballPrefab: {fileID: 0}
+  PaddlePrefab: {fileID: 0}
+  BallPrefab: {fileID: 0}
   spawnPoints:
   - {fileID: 0}
   - {fileID: 0}
