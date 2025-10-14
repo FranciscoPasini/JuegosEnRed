@@ -9,8 +9,8 @@ public class GameStarter : MonoBehaviourPunCallbacks
     public static GameStarter Instance;
 
     [Header("Prefabs")]
-    [SerializeField] private GameObject paddlePrefab;     // prefab con PaddleController + PhotonView
-    [SerializeField] private GameObject ballPrefab;       // prefab con BallController + PhotonView
+    [SerializeField] private GameObject PaddlePrefab;     // prefab con PaddleController + PhotonView
+    [SerializeField] private GameObject BallPrefab;       // prefab con BallController + PhotonView
 
     [Header("Spawns (4) - assign in inspector")]
     [SerializeField] private Transform[] spawnPoints = new Transform[4];
@@ -58,7 +58,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
         Transform spawn = spawnPoints.Length > 0 ? spawnPoints[spawnIndex] : transform;
 
         // PhotonNetwork.Instantiate: crea la paleta en la red
-        GameObject paddle = PhotonNetwork.Instantiate(paddlePrefab.name, spawn.position, spawn.rotation);
+        GameObject paddle = PhotonNetwork.Instantiate(PaddlePrefab.name, spawn.position, spawn.rotation);
         // mandar datos de equipo/color al paddle (usa RPC local del paddle o SetOwnerData)
         int team = (spawnIndex % 2 == 0) ? 1 : 2; // 0->team1, 1->team2 (pero guardamos 1/2)
         paddle.GetComponent<PhotonView>().RPC("RPC_SetPlayerData", RpcTarget.AllBuffered, team, PhotonNetwork.NickName);
