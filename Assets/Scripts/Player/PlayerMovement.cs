@@ -25,8 +25,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if (photonView.IsMine)
-        {
+        if (!photonView.IsMine) return;
+        if (Chat.IsTyping) return;
+        
             float horizontal = Input.GetAxisRaw("Horizontal");
             float vertical = Input.GetAxisRaw("Vertical");
             Vector2 movement = new Vector2(horizontal, vertical);
@@ -40,7 +41,6 @@ public class PlayerMovement : MonoBehaviour
                     gameStarter.startPanel.SetActive(!isActive);
                 }
             }
-        }
     }
 
     [PunRPC]
