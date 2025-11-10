@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class GameStarter : MonoBehaviourPunCallbacks
 {
+    public GameObject obstaculos;
+
     public static GameStarter Instance;
 
     [SerializeField] private GameObject playerPrefab;
@@ -23,6 +25,8 @@ public class GameStarter : MonoBehaviourPunCallbacks
     private void Awake()
     {
         if (Instance == null) Instance = this;
+
+        obstaculos.SetActive(false);
     }
 
     public void Start()
@@ -128,5 +132,6 @@ public class GameStarter : MonoBehaviourPunCallbacks
         {
             GameManager.Instance.BeginMatch();
         }
+        obstaculos.SetActive(true);
     }
 }
