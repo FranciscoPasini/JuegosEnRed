@@ -80,7 +80,7 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         }
 
         RoomOptions options = new RoomOptions();
-        options.MaxPlayers = 20;
+        options.MaxPlayers = 12;
 
         PhotonNetwork.CreateRoom(roomNameInputField.text, options);
     }
