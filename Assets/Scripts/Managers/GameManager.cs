@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         PlayerStateController chosen = players[idx];
         int actorNumber = chosen.pv.Owner != null ? chosen.pv.Owner.ActorNumber : -1;
 
-        StartBombTimer(15f, actorNumber);
+        StartBombTimer(10f, actorNumber);
     }
 
     public void StartBombTimer(float duration, int actorNumber)

@@ -92,18 +92,6 @@ public class PlayerStateController : MonoBehaviourPun
         spriteRenderer.color = color;
     }
 
-    [PunRPC]
-    public void RPC_Die()
-    {
-        gameObject.SetActive(false);
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            GameManager.Instance.CheckWinner();
-            GameManager.Instance.Invoke(nameof(GameManager.Instance.AssignBombAfterDelay), 3f);
-        }
-    }
-
     private void OnCollisionEnter2D(Collision2D collision)
     {
         TryHandleCollisionWith(collision.gameObject);
@@ -154,8 +142,25 @@ public class PlayerStateController : MonoBehaviourPun
 
         if (hasBomb && PhotonNetwork.IsMasterClient)
         {
-            GameManager.Instance.StartBombTimer(15f, pv.Owner.ActorNumber);
+            GameManager.Instance.StartBombTimer(10f, pv.Owner.ActorNumber);
+        }
+    }
+
+    [PunRPC]
+    public void RPC_Die()
+    {
+        if (pv.IsMine)
+        {
+            ChangeState(new EliminatedState());
         }
 
+        // Desactivar el objeto en todas las copias de red
+        gameObject.SetActive(false);
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            GameManager.Instance.CheckWinner();
+            GameManager.Instance.Invoke(nameof(GameManager.Instance.AssignBombAfterDelay), 3f);
+        }
     }
 }

@@ -15,6 +15,9 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     public Transform playerListContent;
     public GameObject playerListItemPrefab;
+    [SerializeField] private GameObject diePanel;
+    public GameObject DiePanel => diePanel;
+
 
     public GameObject startPanel;
     [SerializeField] private GameObject playButton;
@@ -84,7 +87,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
         SceneManager.LoadScene("MainMenu");
     }
 
-    private void ClosePanel(GameObject panel)
+    public void ClosePanel(GameObject panel)
     {
         panel.SetActive(false);
     }
