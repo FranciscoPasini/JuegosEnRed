@@ -27,6 +27,8 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
     public GameObject setRoomsPanel;
     public GameObject createPanel;
     public GameObject joinPanel;
+    public GameObject loadingPanel;
+    public GameObject disconnectionPanel;
 
     public static MainMenuManager Instance;
     public void Awake()
@@ -63,6 +65,8 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         PhotonNetwork.ConnectUsingSettings();
 
         connectionButton.interactable = false;
+
+        OpenPanel(loadingPanel);
     }
 
     public override void OnConnectedToMaster() // lo que hace ni bien nos conecta al server
@@ -121,6 +125,13 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
     public override void OnDisconnected(DisconnectCause cause) // accion ni bien desconecta
     {
         Debug.Log("Desconectado de Photon: " + cause);
+        OpenPanel(disconnectionPanel);
+    }
+
+    public void DisconnectionBack()
+    {
+        SceneManager.LoadScene("MainMenu");
+        OpenPanel(mainMenuPanel);
     }
 
     public void ExitButton()
@@ -134,6 +145,8 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         joinPanel.SetActive(false);
         setRoomsPanel.SetActive(false);
         createPanel.SetActive(false);
+        loadingPanel.SetActive(false);
+        disconnectionPanel.SetActive(false);
 
         panel.SetActive(true);
     }
