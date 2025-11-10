@@ -1,4 +1,4 @@
-using Photon.Pun;
+﻿using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
 using TMPro;
@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     private bool bombActive = false;
     private int currentBombOwner = -1;
 
-    // ?? Variables de sincronizaci�n del tiempo
+    // ?? Variables de sincronización del tiempo
     private double bombStartTime;
     private float bombDuration;
 
@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             Invoke(nameof(AssignBombAfterDelay), 5f);
     }
 
-    // ?? Ahora es p�blica
+    // ?? Ahora es pública
     public void AssignBombAfterDelay()
     {
         if (players.Count == 0) return;
@@ -157,11 +157,29 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (alive == 1 && last != null)
         {
-            Debug.Log("?? Ganador: " + last.name);
+            Debug.Log("🏆 Ganador: " + last.name);
+
+            // 🔹 Solo el MasterClient sube el score para evitar duplicados
             if (PhotonNetwork.IsMasterClient)
-                photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
+            {
+                // Puedes decidir qué valor de score usar
+                int score = 100; // Ejemplo: 100 puntos por ganar una ronda
+
+                // Subir el puntaje al leaderboard global
+                LeaderboardService.SubmitScore(score, "global_highscore", success =>
+                {
+                    if (success)
+                        Debug.Log($"Score enviado para {last.name}: {score}");
+                    else
+                        Debug.LogError("Error al subir el score");
+                });
+            }
+
+            // Reiniciar la partida
+            photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
         }
     }
+
 
     [PunRPC]
     private void RPC_RestartMatch()
