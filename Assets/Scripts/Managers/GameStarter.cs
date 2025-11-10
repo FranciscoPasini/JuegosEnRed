@@ -1,4 +1,4 @@
-using Photon.Pun;
+﻿using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,7 +9,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
     public static GameStarter Instance;
 
     [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private Transform spawnPoint;
+    [SerializeField] private Transform[] spawnPoints; // ← CAMBIAR a array de spawn points
 
     public Transform playerListContent;
     public GameObject playerListItemPrefab;
@@ -19,7 +19,13 @@ public class GameStarter : MonoBehaviourPunCallbacks
     private bool hasSpawned = false;
 
     GameManager gameManager;
-    public void Awake()
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
+
+    public void Start()
     {
         RefreshPlayerList();
     }
@@ -27,15 +33,16 @@ public class GameStarter : MonoBehaviourPunCallbacks
     public void Update()
     {
         RefreshPlayerList();
+
+        // Actualizar visibilidad del botón de inicio
+        if (playButton != null)
+            playButton.SetActive(PhotonNetwork.IsMasterClient);
     }
 
     private void OnEnable()
     {
         if (startPanel != null)
             startPanel.SetActive(true);
-
-        if (playButton != null)
-            playButton.SetActive(PhotonNetwork.IsMasterClient);
     }
 
     public void StartMatch()
@@ -44,8 +51,9 @@ public class GameStarter : MonoBehaviourPunCallbacks
         {
             photonView.RPC("RPC_StartMatchForAll", RpcTarget.AllBuffered);
             startPanel.SetActive(false);
-            playButton.SetActive(false);
-        }  
+            if (playButton != null)
+                playButton.SetActive(false);
+        }
     }
 
     public void RefreshPlayerList()
@@ -77,16 +85,43 @@ public class GameStarter : MonoBehaviourPunCallbacks
         panel.SetActive(false);
     }
 
+    // MÉTODO PARA OBTENER POSICIÓN DE SPAWN
+    private Vector3 GetSpawnPosition(Player player)
+    {
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Debug.LogWarning("No spawn points defined, using default");
+            return Vector3.zero;
+        }
+
+        // Usar ActorNumber para asignar spawn point único
+        int playerNumber = player.ActorNumber - 1;
+        int spawnIndex = playerNumber % spawnPoints.Length;
+
+        return spawnPoints[spawnIndex].position;
+    }
+
     [PunRPC]
     private void RPC_StartMatchForAll()
     {
         if (hasSpawned) return; // evitar duplicados
 
-        GameObject player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
-        player.GetComponent<PhotonView>().RPC("RPC_SetNickname", RpcTarget.AllBuffered, PlayerPrefs.GetString("playerNickname"));
+        // Obtener posición de spawn para este jugador
+        Vector3 spawnPosition = GetSpawnPosition(PhotonNetwork.LocalPlayer);
+
+        GameObject player = PhotonNetwork.Instantiate(
+            playerPrefab.name,
+            spawnPosition,
+            Quaternion.identity
+        );
+
+        player.GetComponent<PhotonView>().RPC(
+            "RPC_SetNickname",
+            RpcTarget.AllBuffered,
+            PlayerPrefs.GetString("playerNickname")
+        );
 
         ClosePanel(startPanel);
-
         hasSpawned = true;
 
         if (GameManager.Instance != null)
