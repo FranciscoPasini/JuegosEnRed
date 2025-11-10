@@ -152,9 +152,10 @@ public class PlayerStateController : MonoBehaviourPun
                 p.ChangeState(new NormalState());
         }
 
-        if (GameManager.Instance != null)
+        if (hasBomb && PhotonNetwork.IsMasterClient)
         {
-            GameManager.Instance.StartBombTimer(10f);
+            GameManager.Instance.StartBombTimer(15f, pv.Owner.ActorNumber);
         }
+
     }
 }

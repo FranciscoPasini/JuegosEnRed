@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
-using UnityEngine;
+using System.Collections.Generic;
 using TMPro;
+using UnityEngine;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
@@ -10,148 +10,156 @@ public class GameManager : MonoBehaviourPunCallbacks
     private readonly List<PlayerStateController> players = new List<PlayerStateController>();
 
     [SerializeField] private TMP_Text TimerText;
+
     private float currentTime = 0f;
     private bool isCounting = false;
-    GameStarter gameStarter;
+    private bool bombActive = false;
+    private int currentBombOwner = -1;
+
+    // ?? Variables de sincronización del tiempo
+    private double bombStartTime;
+    private float bombDuration;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
-
-        Debug.Log("GameManager Awake");
     }
 
     private void Update()
     {
-        Timer();
-    }
-
-    public void Timer()
-    {
-        if (!isCounting) return;
-
-        currentTime -= Time.deltaTime;
-        if (currentTime < 0f) currentTime = 0f;
-
-        TimerText.text = Mathf.CeilToInt(currentTime).ToString();
-    }
-
-    public void BeginMatch()
-    {
-        Debug.Log($"GameManager Start - IsMasterClient: {PhotonNetwork.IsMasterClient}");
-
-        // Solo el MasterClient decide la asignación inicial
-        if (PhotonNetwork.IsMasterClient)
+        if (isCounting && bombActive)
         {
-            Invoke(nameof(AssignBombAfterDelay), 10f);
-            Debug.Log("MasterClient scheduled AssignBombAfterDelay(10s)");
+            double elapsed = PhotonNetwork.Time - bombStartTime;
+            currentTime = bombDuration - (float)elapsed;
+
+            if (PhotonNetwork.IsMasterClient && currentTime <= 0f)
+            {
+                currentTime = 0f;
+                bombActive = false;
+                photonView.RPC(nameof(RPC_ExplodeCurrentBombOwner), RpcTarget.AllBuffered, currentBombOwner);
+            }
+
+            if (TimerText != null)
+                TimerText.text = Mathf.CeilToInt(Mathf.Max(currentTime, 0f)).ToString();
         }
     }
 
     public void RegisterPlayer(PlayerStateController player)
     {
         if (!players.Contains(player))
-        {
             players.Add(player);
-            Debug.Log($"Registered player: {player.name} (actor:{(player.pv.Owner != null ? player.pv.Owner.ActorNumber : -1)}) total:{players.Count}");
-        }
     }
 
     public void UnregisterPlayer(PlayerStateController player)
     {
-        if (players.Remove(player))
-        {
-            Debug.Log($"Unregistered player: {player.name}. remaining:{players.Count}");
-        }
+        players.Remove(player);
     }
 
+    public void BeginMatch()
+    {
+        if (PhotonNetwork.IsMasterClient)
+            Invoke(nameof(AssignBombAfterDelay), 5f);
+    }
+
+    // ?? Ahora es pública
     public void AssignBombAfterDelay()
     {
-        Debug.Log("AssignBombAfterDelay called.");
-        if (players.Count == 0)
-        {
-            Debug.LogWarning("No players registered in GameManager.players. Falling back to PhotonNetwork.PlayerList.");
-            if (PhotonNetwork.PlayerList.Length > 0)
-            {
-                Player random = PhotonNetwork.PlayerList[Random.Range(0, PhotonNetwork.PlayerList.Length)];
-                photonView.RPC("RPC_AssignBomb", RpcTarget.AllBuffered, random.ActorNumber);
-            }
-            return;
-        }
+        if (players.Count == 0) return;
 
         int idx = Random.Range(0, players.Count);
         PlayerStateController chosen = players[idx];
         int actorNumber = chosen.pv.Owner != null ? chosen.pv.Owner.ActorNumber : -1;
-        Debug.Log($"Chosen local player: {chosen.name}, actor: {actorNumber}");
-        photonView.RPC("RPC_AssignBomb", RpcTarget.AllBuffered, actorNumber);
+
+        StartBombTimer(15f, actorNumber);
     }
 
-    public void CheckWinner()
+    public void StartBombTimer(float duration, int actorNumber)
     {
-        int alivePlayers = 0;
-        PlayerStateController lastPlayer = null;
-
-        foreach (var p in players)
-        {
-            if (p.gameObject.activeSelf)
-            {
-                alivePlayers++;
-                lastPlayer = p;
-            }
-        }
-
-        if (alivePlayers == 1 && lastPlayer != null)
-        {
-            Debug.Log($"Ganador: {lastPlayer.name}");
-
-            if (PhotonNetwork.IsMasterClient)
-            {
-                photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
-            }
-        }
-    }
-
-public void StartBombTimer(float duration)
-    {
-        currentTime = duration;
+        bombDuration = duration;
+        bombStartTime = PhotonNetwork.Time;
         isCounting = true;
-        if (TimerText != null)
-        {
-            TimerText.gameObject.SetActive(true);
-        }
+        bombActive = true;
+        currentBombOwner = actorNumber;
+
+        photonView.RPC(nameof(RPC_StartBombTimerSync), RpcTarget.AllBuffered, bombStartTime, bombDuration, actorNumber);
+    }
+
+    [PunRPC]
+    private void RPC_StartBombTimerSync(double startTime, float duration, int actorNumber)
+    {
+        bombStartTime = startTime;
+        bombDuration = duration;
+        isCounting = true;
+        bombActive = true;
+        currentBombOwner = actorNumber;
+
+        RPC_AssignBomb(actorNumber);
     }
 
     public void StopBombTimer()
     {
         isCounting = false;
+        bombActive = false;
+        currentTime = 0f;
+
         if (TimerText != null)
-        {
             TimerText.text = "";
-            TimerText.gameObject.SetActive(false);
-        }
     }
 
     [PunRPC]
     private void RPC_AssignBomb(int actorNumber)
     {
-        Debug.Log($"RPC_AssignBomb received on client. actorNumber={actorNumber}");
-        // Recorremos los PlayerStateController que están en esta escena/local client
-        var localPlayers = FindObjectsOfType<PlayerStateController>();
-        foreach (var p in localPlayers)
+        foreach (var p in FindObjectsOfType<PlayerStateController>())
         {
             int ownerActor = (p.pv.Owner != null) ? p.pv.Owner.ActorNumber : -1;
-            Debug.Log($" - checking {p.name} ownerActor={ownerActor}");
             if (ownerActor == actorNumber)
-            {
                 p.ChangeState(new BombState());
-                StartBombTimer(10f);
-            }
-
             else
-            {
                 p.ChangeState(new NormalState());
+        }
+    }
+
+    [PunRPC]
+    private void RPC_ExplodeCurrentBombOwner(int actorNumber)
+    {
+        foreach (var p in FindObjectsOfType<PlayerStateController>())
+        {
+            if (p.pv.Owner != null && p.pv.Owner.ActorNumber == actorNumber)
+                p.RPC_Die();
+        }
+
+        StopBombTimer();
+
+        if (PhotonNetwork.IsMasterClient)
+            Invoke(nameof(AssignBombAfterDelay), 3f);
+    }
+
+    public void NotifyBombPass(int newOwnerActor)
+    {
+        currentBombOwner = newOwnerActor;
+        photonView.RPC(nameof(RPC_AssignBomb), RpcTarget.AllBuffered, newOwnerActor);
+    }
+
+    public void CheckWinner()
+    {
+        int alive = 0;
+        PlayerStateController last = null;
+
+        foreach (var p in players)
+        {
+            if (p.gameObject.activeSelf)
+            {
+                alive++;
+                last = p;
             }
+        }
+
+        if (alive == 1 && last != null)
+        {
+            Debug.Log("?? Ganador: " + last.name);
+            if (PhotonNetwork.IsMasterClient)
+                photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
         }
     }
 
@@ -160,5 +168,6 @@ public void StartBombTimer(float duration)
     {
         PhotonNetwork.LoadLevel("Levels");
     }
-
 }
+
+

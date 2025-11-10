@@ -52,6 +52,8 @@ MonoBehaviour:
   - RPC_StartMatchForAll
   - RPC_RestartMatch
   - GetMessage
+  - RPC_ExplodeCurrentBombOwner
+  - RPC_StartBombTimerSync
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
