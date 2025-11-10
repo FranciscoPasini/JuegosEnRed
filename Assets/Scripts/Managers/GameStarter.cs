@@ -46,7 +46,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
             playButton.SetActive(PhotonNetwork.IsMasterClient);
     }
 
-    private void OnEnable()
+    private new void OnEnable()
     {
         if (startPanel != null)
             startPanel.SetActive(true);

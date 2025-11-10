@@ -11,7 +11,7 @@ public class PlayerStateController : MonoBehaviourPun
     private float bombTimer;
     private bool hasBomb;
     private bool canPassBomb = true; // cooldown flag
-    private float passCooldown = 2f; // 1 segundo de cooldown
+    private float passCooldown = 1f; // 1 segundo de cooldown
 
     [Header("Bomb Indicator")]
     [SerializeField] private GameObject bombIndicator;
@@ -85,6 +85,27 @@ public class PlayerStateController : MonoBehaviourPun
                 playerMovement.SetSpeedMultiplier(1f);
         }
     }
+    public void Stun(float duration)
+    {
+        if (!pv.IsMine) return; // solo afecta al jugador local
+        StartCoroutine(StunCoroutine(duration));
+    }
+
+    private IEnumerator StunCoroutine(float duration)
+    {
+        if (playerMovement != null)
+            playerMovement.EnableMovement(false);
+        SetColor(Color.magenta);
+
+        yield return new WaitForSeconds(duration);
+
+        if (playerMovement != null)
+            playerMovement.EnableMovement(true);
+        if (currentState is BombState)
+            SetColor(Color.red);
+        else
+            SetColor(Color.white);
+    }
 
     public void SetColor(Color color)
     {
@@ -135,7 +156,10 @@ public class PlayerStateController : MonoBehaviourPun
         {
             int ownerActor = (p.pv.Owner != null) ? p.pv.Owner.ActorNumber : -1;
             if (ownerActor == targetActor)
+            {
                 p.ChangeState(new BombState());
+                p.Stun(1f); // ?? Stun de 1 segundos al recibir la bomba
+            }
             else if (p.hasBomb)
                 p.ChangeState(new NormalState());
         }

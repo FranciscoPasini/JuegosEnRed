@@ -4,11 +4,14 @@ using Photon.Pun;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float speed = 5;
+    [SerializeField] private int speed = 5;
     [SerializeField] private TextMeshPro nickNameUI;
     private PhotonView photonView;
 
     private GameStarter gameStarter;
+
+    private float speedMultiplier = 1f;
+    private bool canMove = true; // ?? Nueva variable
 
     private void Start()
     {
@@ -16,9 +19,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (photonView.IsMine)
         {
-            // Se busca el gameStarter
             gameStarter = FindObjectOfType<GameStarter>();
-            // Llamo solo en el mío para setear mi nombre
             photonView.RPC("RPC_SetNickname", RpcTarget.AllBuffered, PlayerPrefs.GetString("playerNickname"));
         }
     }
@@ -26,28 +27,23 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         if (!photonView.IsMine) return;
-        if (Chat.IsTyping) return;
-        
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
-            Vector2 movement = new Vector2(horizontal, vertical);
-            transform.Translate(movement.normalized * speed * Time.deltaTime);
 
-            if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
+        if (!canMove) return; // ?? Bloquea WASD mientras está stuneado
+
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector2 movement = new Vector2(horizontal, vertical);
+        transform.Translate(movement.normalized * speed * speedMultiplier * Time.deltaTime);
+
+        if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (gameStarter != null && gameStarter.startPanel != null)
             {
-                if (gameStarter != null && gameStarter.startPanel != null)
-                {
-                    bool isActive = gameStarter.startPanel.activeSelf;
-                    gameStarter.startPanel.SetActive(!isActive);
-                }
+                bool isActive = gameStarter.startPanel.activeSelf;
+                gameStarter.startPanel.SetActive(!isActive);
             }
+        }
     }
-
-    public void SetSpeedMultiplier(float multiplier)
-    {
-        speed = 5f * multiplier; // 5 es tu velocidad base
-    }
-
 
     [PunRPC]
     public void RPC_SetNickname(string name)
@@ -55,4 +51,16 @@ public class PlayerMovement : MonoBehaviour
         Debug.Log("Set nickname: " + name);
         nickNameUI.text = name;
     }
+
+    // ?? Métodos nuevos:
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        speedMultiplier = multiplier;
+    }
+
+    public void EnableMovement(bool enable)
+    {
+        canMove = enable;
+    }
 }
+
