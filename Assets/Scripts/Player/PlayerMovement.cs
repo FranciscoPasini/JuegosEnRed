@@ -4,7 +4,7 @@ using Photon.Pun;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private int speed = 5;
+    [SerializeField] private float speed = 5;
     [SerializeField] private TextMeshPro nickNameUI;
     private PhotonView photonView;
 
@@ -42,6 +42,12 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
     }
+
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        speed = 5f * multiplier; // 5 es tu velocidad base
+    }
+
 
     [PunRPC]
     public void RPC_SetNickname(string name)

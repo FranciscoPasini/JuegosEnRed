@@ -8,17 +8,22 @@ public class PlayerStateController : MonoBehaviourPun
     [HideInInspector] public PhotonView pv;
     private SpriteRenderer spriteRenderer;
 
-    private float bombTimer; // tiempo que queda si tiene bomba
+    private float bombTimer;
     private bool hasBomb;
+    private bool canPassBomb = true; // cooldown flag
+    private float passCooldown = 2f; // 1 segundo de cooldown
 
     [Header("Bomb Indicator")]
     [SerializeField] private GameObject bombIndicator;
+
+    // Referencia al movimiento para modificar velocidad
+    private PlayerMovement playerMovement;
 
     private void Awake()
     {
         pv = GetComponent<PhotonView>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        Debug.Log($"[{name}] Awake. PV? {(pv != null)} SR? {(spriteRenderer != null)}");
+        playerMovement = GetComponent<PlayerMovement>();
 
         if (bombIndicator == null)
             bombIndicator = transform.Find("BombIndicator")?.gameObject;
@@ -32,20 +37,15 @@ public class PlayerStateController : MonoBehaviourPun
     private IEnumerator RegisterWhenGameManagerReady()
     {
         while (GameManager.Instance == null)
-        {
-            Debug.Log($"[{name}] Waiting for GameManager.Instance...");
             yield return null;
-        }
 
-        Debug.Log($"[{name}] Registering with GameManager. Owner: {(pv.Owner != null ? pv.Owner.NickName : "null")}, Actor: {(pv.Owner != null ? pv.Owner.ActorNumber : -1)}");
         GameManager.Instance.RegisterPlayer(this);
-
         ChangeState(new NormalState());
     }
 
     private void Update()
     {
-        if (!pv.IsMine) return; // solo controla su propio temporizador
+        if (!pv.IsMine) return;
 
         if (hasBomb)
         {
@@ -59,61 +59,84 @@ public class PlayerStateController : MonoBehaviourPun
 
     public void ChangeState(IPlayerState newState)
     {
-        Debug.Log($"[{name}] ChangeState -> {newState?.GetType().Name}");
         currentState?.Exit(this);
         currentState = newState;
         currentState?.Enter(this);
 
-        // Configuración automática según el estado
         if (newState is BombState)
         {
             hasBomb = true;
-            bombTimer = 10f; // duración de la bomba
+            bombTimer = 10f;
             SetColor(Color.red);
+            if (bombIndicator != null) bombIndicator.SetActive(true);
 
-            if (bombIndicator != null)
-                bombIndicator.SetActive(true);  // Mostrar círculo
+            // ?? aumentar velocidad si tiene bomba
+            if (playerMovement != null)
+                playerMovement.SetSpeedMultiplier(1.15f); // 15% más rápido
         }
         else
         {
             hasBomb = false;
             SetColor(Color.white);
+            if (bombIndicator != null) bombIndicator.SetActive(false);
 
-            if (bombIndicator != null)
-                bombIndicator.SetActive(false); // Ocultar círculo
+            // ?? restaurar velocidad normal
+            if (playerMovement != null)
+                playerMovement.SetSpeedMultiplier(1f);
         }
     }
 
     public void SetColor(Color color)
     {
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null) spriteRenderer.color = color;
+        spriteRenderer.color = color;
     }
 
     [PunRPC]
     public void RPC_Die()
     {
-        Debug.Log($"{name} murió con la bomba");
         gameObject.SetActive(false);
 
         if (PhotonNetwork.IsMasterClient)
         {
-            GameManager.Instance.CheckWinner(); //verificar si queda solo uno
+            GameManager.Instance.CheckWinner();
             GameManager.Instance.Invoke(nameof(GameManager.Instance.AssignBombAfterDelay), 3f);
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (!hasBomb) return; // solo el que tiene la bomba puede pasarla
-        if (!pv.IsMine) return; // solo el dueño controla el traspaso
+        TryHandleCollisionWith(collision.gameObject);
+    }
 
-        PlayerStateController other = collision.gameObject.GetComponent<PlayerStateController>();
-        if (other != null && !other.hasBomb)
-        {
-            // Pasar la bomba al otro jugador
-            photonView.RPC("RPC_PassBomb", RpcTarget.AllBuffered, other.pv.Owner.ActorNumber);
-        }
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        TryHandleCollisionWith(other.gameObject);
+    }
+
+    private void TryHandleCollisionWith(GameObject otherObj)
+    {
+        if (!hasBomb) return;
+        if (!pv.IsMine) return;
+        if (!canPassBomb) return; // ?? cooldown activo
+
+        PlayerStateController other = otherObj.GetComponent<PlayerStateController>();
+        if (other == null || other.hasBomb) return;
+
+        if (other.pv == null || other.pv.Owner == null) return;
+
+        int targetActor = other.pv.Owner.ActorNumber;
+        pv.RPC("RPC_PassBomb", RpcTarget.AllBuffered, targetActor);
+
+        // ?? iniciar cooldown
+        StartCoroutine(BombPassCooldown());
+    }
+
+    private IEnumerator BombPassCooldown()
+    {
+        canPassBomb = false;
+        yield return new WaitForSeconds(passCooldown);
+        canPassBomb = true;
     }
 
     [PunRPC]
@@ -122,10 +145,16 @@ public class PlayerStateController : MonoBehaviourPun
         var players = FindObjectsOfType<PlayerStateController>();
         foreach (var p in players)
         {
-            if (p.pv.Owner.ActorNumber == targetActor)
+            int ownerActor = (p.pv.Owner != null) ? p.pv.Owner.ActorNumber : -1;
+            if (ownerActor == targetActor)
                 p.ChangeState(new BombState());
             else if (p.hasBomb)
                 p.ChangeState(new NormalState());
+        }
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StartBombTimer(10f);
         }
     }
 }
