@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using TMPro;
 
 public class LeaderboardUI : MonoBehaviour
 {
     [SerializeField] string leaderboardKey = "global_highscore";
     [SerializeField] int count = 10;
-    [SerializeField] TMPro.TextMeshProUGUI tableText;
+    public TMPro.TextMeshProUGUI tableText;
 
     public void Refresh()
     {
