@@ -3,27 +3,37 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class LeaderboardUI : MonoBehaviour
 {
     [SerializeField] string leaderboardKey = "global_highscore";
-    [SerializeField] int count = 10;
     public TMPro.TextMeshProUGUI tableText;
+    [SerializeField] int amountToFetch = 10;
+
+    private void Start()
+    {
+        Refresh();
+    }
 
     public void Refresh()
     {
+        // Si por alguna razón no hay sesión (ej. probaste la escena directo sin pasar por MainMenu)
         if (!LootLockerBootstrap.SessionStarted)
         {
-            tableText.text = "Logueando...";
+            tableText.text = "No hay sesión iniciada.";
             return;
         }
 
-        LootLockerSDKManager.GetScoreList(leaderboardKey, count, 0, response =>
+        tableText.text = "Cargando puntajes...";
+
+        LootLockerSDKManager.GetScoreList(leaderboardKey, amountToFetch, 0, response =>
         {
             if (!response.success)
             {
-                tableText.text = "Error...";
+                tableText.text = "Error de conexión.";
+                return;
             }
 
             StringBuilder sb = new StringBuilder();
@@ -34,7 +44,7 @@ public class LeaderboardUI : MonoBehaviour
 
             if (items == null || items.Length == 0)
             {
-                sb.AppendLine("No se registro nada todavia");
+                sb.AppendLine("Nadie ha jugado aún.");
             }
             else
             {
@@ -47,6 +57,11 @@ public class LeaderboardUI : MonoBehaviour
 
             tableText.text = sb.ToString();
         });
+    }
+
+    public void BackToMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void OnSubmitScoreTMP(TMPro.TMP_InputField scoreInput)

@@ -12,8 +12,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     [Header("UI References")]
     [SerializeField] private TMP_Text TimerText;
-    // [IMPORTANTE] Arrastra tu objeto que tiene el script LeaderboardUI aquí en el Inspector
-    [SerializeField] private LeaderboardUI leaderboardUI;
+    // [MODIFICADO] Se eliminó la referencia a LeaderboardUI porque ya no está en esta escena
 
     [Header("Game Settings")]
     [SerializeField] private int pointsPerWin = 100;
@@ -35,8 +34,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        // Aseguramos que la leaderboard empiece oculta
-        if (leaderboardUI != null) leaderboardUI.gameObject.SetActive(false);
+        // [MODIFICADO] Eliminada la lógica de ocultar leaderboardUI
     }
 
     private void Update()
@@ -67,7 +65,11 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void UnregisterPlayer(PlayerStateController player)
     {
         players.Remove(player);
-        CheckWinner();
+        // Si alguien se desconecta, verificamos si queda uno solo vivo
+        if (players.Count > 0)
+        {
+            CheckWinner();
+        }
     }
 
     public void BeginMatch()
@@ -155,12 +157,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         photonView.RPC(nameof(RPC_AssignBomb), RpcTarget.AllBuffered, newOwnerActor);
     }
 
-    // --- LÓGICA DE GANADOR Y LEADERBOARD ---
-
-    // En GameManager.cs
+    // --- LÓGICA DE GANADOR ---
 
     public void CheckWinner()
     {
+        if (!PhotonNetwork.IsMasterClient) return; // Solo el Master decide esto para evitar conflictos
+
         int alive = 0;
         PlayerStateController winner = null;
 
@@ -175,58 +177,40 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (alive == 1 && winner != null)
         {
-            Debug.Log("?? Ganador detectado: " + winner.name);
+            Debug.Log("Ganador detectado: " + winner.pv.Owner.NickName);
 
-            // 1. Activar el UI visualmente (pero quizás esperar para el Refresh)
-            if (leaderboardUI != null)
-            {
-                leaderboardUI.gameObject.SetActive(true);
-                // NO hacemos Refresh() aquí todavía para evitar mostrar datos viejos
-                leaderboardUI.tableText.text = "Calculando puntajes...";
-            }
-
-            // 2. Si YO soy el ganador, subo mi puntaje
-            if (winner.pv.IsMine)
-            {
-                Debug.Log("Soy el ganador local, iniciando suma de puntaje...");
-                LeaderboardService.AddScore(pointsPerWin, leaderboardKey, (success) =>
-                {
-                    if (success)
-                    {
-                        Debug.Log("Puntaje actualizado. Avisando a todos para actualizar tabla.");
-                        // Avisamos a todos (incluyéndome) que actualicen la tabla AHORA
-                        photonView.RPC("RPC_UpdateLeaderboardUI", RpcTarget.All);
-                    }
-                });
-            }
-            else
-            {
-                // Si no soy el ganador, espero a que el ganador termine de subir su score
-                // O podemos esperar el RPC del ganador.
-            }
-
-            // 3. El Master Client coordina el reinicio
-            if (PhotonNetwork.IsMasterClient)
-            {
-                StartCoroutine(WaitAndRestartMatch());
-            }
+            // Llamamos a un RPC para avisar a todos que terminó la ronda y pasar el ID del ganador
+            photonView.RPC(nameof(RPC_HandleWin), RpcTarget.All, winner.pv.ViewID);
         }
     }
 
-    // AGREGAR ESTE NUEVO RPC en GameManager.cs
+    // [NUEVO] Este RPC maneja la victoria, sube puntos y coordina el reinicio
     [PunRPC]
-    public void RPC_UpdateLeaderboardUI()
+    private void RPC_HandleWin(int winnerViewID)
     {
-        if (leaderboardUI != null && leaderboardUI.gameObject.activeSelf)
+        PhotonView winnerPV = PhotonView.Find(winnerViewID);
+
+        // 1. Si YO soy el ganador, subo mi puntaje
+        if (winnerPV != null && winnerPV.IsMine)
         {
-            leaderboardUI.Refresh();
+            Debug.Log("¡Gané! Subiendo puntaje...");
+            LeaderboardService.AddScore(pointsPerWin, leaderboardKey, (success) =>
+            {
+                if (success) Debug.Log("Puntaje subido correctamente.");
+            });
+        }
+
+        // 2. El Master Client reinicia la partida automáticamente después de unos segundos
+        if (PhotonNetwork.IsMasterClient)
+        {
+            StartCoroutine(WaitAndRestartMatch());
         }
     }
 
     private IEnumerator WaitAndRestartMatch()
     {
-        // Esperamos 10 segundos para ver la tabla
-        yield return new WaitForSeconds(10f);
+        // [MODIFICADO] Esperamos solo 4 segundos (antes eran 10) porque ya no hay que leer tabla
+        yield return new WaitForSeconds(4f);
         photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
     }
 

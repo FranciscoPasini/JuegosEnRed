@@ -38,8 +38,28 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        connectionButton.onClick.AddListener(ConnectionPhoton); // en el inputfield agrega el metodo ConnectionPhoton
+        connectionButton.onClick.AddListener(ConnectionPhoton);
         nickNameInputField.onValueChanged.AddListener(VerifyName);
+
+        // --- CORRECCIÓN PARA EL BOTÓN VOLVER ---
+
+        // Verificamos si ya estamos conectados a Photon (al volver del Leaderboard)
+        if (PhotonNetwork.IsConnectedAndReady)
+        {
+            // Si ya estamos conectados, vamos directo al panel de salas
+            OpenPanel(setRoomsPanel);
+
+            // Nos aseguramos de estar en el lobby para ver la lista de rooms actualizada
+            if (!PhotonNetwork.InLobby)
+            {
+                PhotonNetwork.JoinLobby();
+            }
+        }
+        else
+        {
+            // Si NO estamos conectados (apenas abrimos el juego), mostramos el Login
+            OpenPanel(mainMenuPanel);
+        }
     }
 
     private void VerifyName(string name) // verifica que el nombre se pueda usar
@@ -63,7 +83,7 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         print(message:nickname + " is trying to connect");
 
         PlayerNameHelper.SetPlayerName(nickname);
-
+        
         PhotonNetwork.NickName = nickname;
         PhotonNetwork.ConnectUsingSettings();
 
@@ -125,6 +145,10 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         PhotonNetwork.Disconnect();
     }
 
+    public void LeaderboardButton()
+    {
+        SceneManager.LoadScene("Leaderboard");
+    }
     public override void OnDisconnected(DisconnectCause cause) // accion ni bien desconecta
     {
         Debug.Log("Desconectado de Photon: " + cause);
