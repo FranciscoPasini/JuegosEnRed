@@ -31,6 +31,16 @@ public class GameStarter : MonoBehaviourPunCallbacks
     private void Update()
     {
         RefreshPlayerList();
+
+        if (playButton != null)
+        {
+            bool canStart =
+                PhotonNetwork.IsMasterClient &&
+                PhotonNetwork.CurrentRoom != null &&
+                PhotonNetwork.CurrentRoom.PlayerCount >= 2;
+
+            playButton.SetActive(canStart);
+        }
     }
 
     private void OnEnable()
@@ -44,12 +54,15 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     public void StartMatch()
     {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            photonView.RPC("RPC_StartMatchForAll", RpcTarget.AllBuffered);
-            startPanel.SetActive(false);
-            playButton.SetActive(false);
-        }
+        if (!PhotonNetwork.IsMasterClient)
+            return;
+
+        if (PhotonNetwork.CurrentRoom.PlayerCount < 2)
+            return;
+
+        photonView.RPC("RPC_StartMatchForAll", RpcTarget.AllBuffered);
+        startPanel.SetActive(false);
+        playButton.SetActive(false);
     }
 
     public void RefreshPlayerList()
