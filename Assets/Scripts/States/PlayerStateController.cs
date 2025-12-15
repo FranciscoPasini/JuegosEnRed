@@ -10,13 +10,12 @@ public class PlayerStateController : MonoBehaviourPun
 
     private float bombTimer;
     private bool hasBomb;
-    private bool canPassBomb = true; // cooldown flag
-    private float passCooldown = 1f; // 1 segundo de cooldown
+    private bool canPassBomb = true;
+    private float passCooldown = 1f;
 
     [Header("Bomb Indicator")]
     [SerializeField] private GameObject bombIndicator;
 
-    // Referencia al movimiento para modificar velocidad
     private PlayerMovement playerMovement;
 
     private void Awake()
@@ -70,9 +69,8 @@ public class PlayerStateController : MonoBehaviourPun
             SetColor(Color.red);
             if (bombIndicator != null) bombIndicator.SetActive(true);
 
-            // ?? aumentar velocidad si tiene bomba
             if (playerMovement != null)
-                playerMovement.SetSpeedMultiplier(1.15f); // 15% más rápido
+                playerMovement.SetSpeedMultiplier(1.15f);
         }
         else
         {
@@ -80,14 +78,13 @@ public class PlayerStateController : MonoBehaviourPun
             SetColor(Color.white);
             if (bombIndicator != null) bombIndicator.SetActive(false);
 
-            // ?? restaurar velocidad normal
             if (playerMovement != null)
                 playerMovement.SetSpeedMultiplier(1f);
         }
     }
     public void Stun(float duration)
     {
-        if (!pv.IsMine) return; // solo afecta al jugador local
+        if (!pv.IsMine) return;
         StartCoroutine(StunCoroutine(duration));
     }
 
@@ -127,7 +124,7 @@ public class PlayerStateController : MonoBehaviourPun
     {
         if (!hasBomb) return;
         if (!pv.IsMine) return;
-        if (!canPassBomb) return; // ?? cooldown activo
+        if (!canPassBomb) return;
 
         PlayerStateController other = otherObj.GetComponent<PlayerStateController>();
         if (other == null || other.hasBomb) return;
@@ -137,7 +134,6 @@ public class PlayerStateController : MonoBehaviourPun
         int targetActor = other.pv.Owner.ActorNumber;
         pv.RPC("RPC_PassBomb", RpcTarget.AllBuffered, targetActor);
 
-        // ?? iniciar cooldown
         StartCoroutine(BombPassCooldown());
     }
 
@@ -158,7 +154,7 @@ public class PlayerStateController : MonoBehaviourPun
             if (ownerActor == targetActor)
             {
                 p.ChangeState(new BombState());
-                p.Stun(1f); // ?? Stun de 1 segundos al recibir la bomba
+                p.Stun(1f);
             }
             else if (p.hasBomb)
                 p.ChangeState(new NormalState());
@@ -178,12 +174,20 @@ public class PlayerStateController : MonoBehaviourPun
             ChangeState(new EliminatedState());
         }
 
-        // Desactivar el objeto en todas las copias de red
+        // 1. Desactivamos al jugador visualmente
         gameObject.SetActive(false);
 
-        if (PhotonNetwork.IsMasterClient)
+        // 2. [IMPORTANTE] Todos verifican si hay un ganador
+        if (GameManager.Instance != null)
         {
             GameManager.Instance.CheckWinner();
+        }
+
+        // 3. Solo el Master se encarga de la lógica de reiniciar rondas si hay más de 1 vivo
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // Solo si quedan jugadores para seguir jugando la ronda
+            // (Si CheckWinner detecta 1 solo vivo, se encarga de terminar el juego)
             GameManager.Instance.Invoke(nameof(GameManager.Instance.AssignBombAfterDelay), 3f);
         }
     }

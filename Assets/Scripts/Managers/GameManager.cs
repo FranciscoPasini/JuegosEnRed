@@ -3,20 +3,27 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using System.Collections; // Necesario para Corrutinas
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
     public static GameManager Instance;
     private readonly List<PlayerStateController> players = new List<PlayerStateController>();
 
+    [Header("UI References")]
     [SerializeField] private TMP_Text TimerText;
+    // [IMPORTANTE] Arrastra tu objeto que tiene el script LeaderboardUI aquí en el Inspector
+    [SerializeField] private LeaderboardUI leaderboardUI;
+
+    [Header("Game Settings")]
+    [SerializeField] private int pointsPerWin = 100;
+    [SerializeField] private string leaderboardKey = "global_highscore"; // La Key de tu dashboard
 
     private float currentTime = 0f;
     private bool isCounting = false;
     private bool bombActive = false;
     private int currentBombOwner = -1;
 
-    // ?? Variables de sincronización del tiempo
     private double bombStartTime;
     private float bombDuration;
 
@@ -24,6 +31,12 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+    }
+
+    private void Start()
+    {
+        // Aseguramos que la leaderboard empiece oculta
+        if (leaderboardUI != null) leaderboardUI.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -54,6 +67,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void UnregisterPlayer(PlayerStateController player)
     {
         players.Remove(player);
+        CheckWinner();
     }
 
     public void BeginMatch()
@@ -62,7 +76,6 @@ public class GameManager : MonoBehaviourPunCallbacks
             Invoke(nameof(AssignBombAfterDelay), 5f);
     }
 
-    // ?? Ahora es pública
     public void AssignBombAfterDelay()
     {
         if (players.Count == 0) return;
@@ -131,7 +144,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         StopBombTimer();
 
-        if (PhotonNetwork.IsMasterClient)
+        // Solo continuamos si hay mas de 1 jugador, si no CheckWinner se encarga
+        if (players.Count > 1 && PhotonNetwork.IsMasterClient)
             Invoke(nameof(AssignBombAfterDelay), 3f);
     }
 
@@ -141,26 +155,61 @@ public class GameManager : MonoBehaviourPunCallbacks
         photonView.RPC(nameof(RPC_AssignBomb), RpcTarget.AllBuffered, newOwnerActor);
     }
 
+    // --- LÓGICA DE GANADOR Y LEADERBOARD ---
+
     public void CheckWinner()
     {
         int alive = 0;
-        PlayerStateController last = null;
+        PlayerStateController winner = null;
 
         foreach (var p in players)
         {
             if (p.gameObject.activeSelf)
             {
                 alive++;
-                last = p;
+                winner = p;
             }
         }
 
-        if (alive == 1 && last != null)
+        if (alive == 1 && winner != null)
         {
-            Debug.Log("?? Ganador: " + last.name);
+            Debug.Log("?? Ganador detectado: " + winner.name);
+
+            // 1. Mostrar Leaderboard a TODOS
+            if (leaderboardUI != null)
+            {
+                leaderboardUI.gameObject.SetActive(true);
+                leaderboardUI.Refresh();
+            }
+
+            // 2. Si YO soy el ganador, subo mi puntaje (ACUMULATIVO)
+            if (winner.pv.IsMine)
+            {
+                Debug.Log("Soy el ganador local, iniciando suma de puntaje...");
+                LeaderboardService.AddScore(pointsPerWin, leaderboardKey, (success) =>
+                {
+                    if (success)
+                    {
+                        Debug.Log("Puntaje actualizado correctamente.");
+                        // Refrescamos la tabla para ver el cambio reflejado
+                        if (leaderboardUI != null) leaderboardUI.Refresh();
+                    }
+                });
+            }
+
+            // 3. El Master Client coordina el reinicio de la partida
             if (PhotonNetwork.IsMasterClient)
-                photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
+            {
+                StartCoroutine(WaitAndRestartMatch());
+            }
         }
+    }
+
+    private IEnumerator WaitAndRestartMatch()
+    {
+        // Esperamos 10 segundos para ver la tabla
+        yield return new WaitForSeconds(10f);
+        photonView.RPC("RPC_RestartMatch", RpcTarget.AllBuffered);
     }
 
     [PunRPC]

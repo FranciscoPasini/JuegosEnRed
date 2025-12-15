@@ -6,6 +6,7 @@ using UnityEngine;
 public class LootLockerBootstrap : MonoBehaviour
 {
     public static bool SessionStarted {  get; private set; }
+    public static string PlayerId { get; private set; }
 
     [SerializeField] string playerIdentifier = "";
 
@@ -24,6 +25,9 @@ public class LootLockerBootstrap : MonoBehaviour
                 Debug.LogError("Fallo");
                 return;
             }
+
+            PlayerId = response.player_id.ToString();
+
             SessionStarted = true;
             Debug.Log("Conectado");
         });
