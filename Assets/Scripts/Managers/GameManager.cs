@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     // [MODIFICADO] Se eliminó la referencia a LeaderboardUI porque ya no está en esta escena
 
     [Header("Game Settings")]
-    [SerializeField] private int pointsPerWin = 100;
+    [SerializeField] private int pointsPerWin = 1;
     [SerializeField] private string leaderboardKey = "global_highscore"; // La Key de tu dashboard
 
     private float currentTime = 0f;
