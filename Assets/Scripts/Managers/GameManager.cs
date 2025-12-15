@@ -3,7 +3,7 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using System.Collections; // Necesario para Corrutinas
+using System.Collections;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
@@ -12,11 +12,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     [Header("UI References")]
     [SerializeField] private TMP_Text TimerText;
-    // [MODIFICADO] Se eliminó la referencia a LeaderboardUI porque ya no está en esta escena
 
     [Header("Game Settings")]
-    [SerializeField] private int pointsPerWin = 1;
-    [SerializeField] private string leaderboardKey = "global_highscore"; // La Key de tu dashboard
+    private int pointsPerWin = 1;
+    [SerializeField] private string leaderboardKey = "global_highscore";
 
     private float currentTime = 0f;
     private bool isCounting = false;
@@ -34,7 +33,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        // [MODIFICADO] Eliminada la lógica de ocultar leaderboardUI
+        
     }
 
     private void Update()
@@ -179,12 +178,10 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             Debug.Log("Ganador detectado: " + winner.pv.Owner.NickName);
 
-            // Llamamos a un RPC para avisar a todos que terminó la ronda y pasar el ID del ganador
             photonView.RPC(nameof(RPC_HandleWin), RpcTarget.All, winner.pv.ViewID);
         }
     }
 
-    // [NUEVO] Este RPC maneja la victoria, sube puntos y coordina el reinicio
     [PunRPC]
     private void RPC_HandleWin(int winnerViewID)
     {
