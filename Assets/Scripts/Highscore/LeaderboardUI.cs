@@ -37,7 +37,7 @@ public class LeaderboardUI : MonoBehaviour
             }
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Rank Name              Score");
+            sb.AppendLine("Rank Name         Partidas ganadas");
             sb.AppendLine("-----------------------------");
 
             var items = response.items;
