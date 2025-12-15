@@ -6604,7 +6604,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TimerText: {fileID: 1914029772}
-  pointsPerWin: 100
+  pointsPerWin: 1
   leaderboardKey: global_highscore
 --- !u!4 &2097656282
 Transform:
