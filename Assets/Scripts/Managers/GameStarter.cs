@@ -16,7 +16,6 @@ public class GameStarter : MonoBehaviourPunCallbacks
     public GameObject DiePanel => diePanel;
     public Transform playerListContent;
     public GameObject playerListItemPrefab;
-    public GameObject obstaculos;
     public GameObject startPanel;
     [SerializeField] private GameObject playButton;
     private bool hasSpawned = false;
@@ -27,7 +26,6 @@ public class GameStarter : MonoBehaviourPunCallbacks
     {
         Instance = this;
         RefreshPlayerList();
-        obstaculos.SetActive(false);
     }
 
     private void Update()
@@ -104,7 +102,6 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
         if (GameManager.Instance != null)
             GameManager.Instance.BeginMatch();
-        obstaculos.SetActive(true);
     }
 
     // 🔹 Devuelve un índice no repetido de spawn aleatorio
