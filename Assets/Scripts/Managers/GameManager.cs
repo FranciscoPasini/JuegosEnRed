@@ -79,10 +79,20 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public void AssignBombAfterDelay()
     {
-        if (players.Count == 0) return;
+        List<PlayerStateController> alivePlayers = new List<PlayerStateController>();
 
-        int idx = Random.Range(0, players.Count);
-        PlayerStateController chosen = players[idx];
+        foreach (var p in players)
+        {
+            if (p != null && p.gameObject.activeSelf)
+                alivePlayers.Add(p);
+        }
+
+        if (alivePlayers.Count <= 1)
+            return;
+
+        int idx = Random.Range(0, alivePlayers.Count);
+        PlayerStateController chosen = alivePlayers[idx];
+
         int actorNumber = chosen.pv.Owner != null ? chosen.pv.Owner.ActorNumber : -1;
 
         StartBombTimer(10f, actorNumber);
@@ -153,6 +163,10 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void NotifyBombPass(int newOwnerActor)
     {
         currentBombOwner = newOwnerActor;
+        bombStartTime = PhotonNetwork.Time;
+        isCounting = true;
+        bombActive = true;
+
         photonView.RPC(nameof(RPC_AssignBomb), RpcTarget.AllBuffered, newOwnerActor);
     }
 

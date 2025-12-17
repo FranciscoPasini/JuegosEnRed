@@ -147,23 +147,25 @@ public class PlayerStateController : MonoBehaviourPun
     [PunRPC]
     private void RPC_PassBomb(int targetActor)
     {
-        var players = FindObjectsOfType<PlayerStateController>();
-        foreach (var p in players)
+        foreach (var p in FindObjectsOfType<PlayerStateController>())
         {
-            int ownerActor = (p.pv.Owner != null) ? p.pv.Owner.ActorNumber : -1;
+            int ownerActor = p.pv.Owner != null ? p.pv.Owner.ActorNumber : -1;
+
             if (ownerActor == targetActor)
             {
                 p.ChangeState(new BombState());
                 p.Stun(1f);
             }
             else if (p.hasBomb)
+            {
                 p.ChangeState(new NormalState());
+            }
         }
-        if (PhotonNetwork.IsMasterClient)
+
+        if (PhotonNetwork.IsMasterClient && GameManager.Instance != null)
         {
             GameManager.Instance.NotifyBombPass(targetActor);
         }
-
     }
 
     [PunRPC]
