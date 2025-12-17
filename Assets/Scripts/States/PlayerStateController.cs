@@ -164,7 +164,7 @@ public class PlayerStateController : MonoBehaviourPun
 
         if (PhotonNetwork.IsMasterClient && GameManager.Instance != null)
         {
-            GameManager.Instance.NotifyBombPass(targetActor);
+            GameManager.Instance.SetCurrentBombOwner(targetActor);
         }
     }
 

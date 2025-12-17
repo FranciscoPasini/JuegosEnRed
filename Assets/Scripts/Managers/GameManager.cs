@@ -98,6 +98,11 @@ public class GameManager : MonoBehaviourPunCallbacks
         StartBombTimer(10f, actorNumber);
     }
 
+    public void SetCurrentBombOwner(int actorNumber)
+    {
+        currentBombOwner = actorNumber;
+    }
+
     public void StartBombTimer(float duration, int actorNumber)
     {
         bombDuration = duration;
@@ -158,16 +163,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         // Solo continuamos si hay mas de 1 jugador, si no CheckWinner se encarga
         if (players.Count > 1 && PhotonNetwork.IsMasterClient)
             Invoke(nameof(AssignBombAfterDelay), 3f);
-    }
-
-    public void NotifyBombPass(int newOwnerActor)
-    {
-        currentBombOwner = newOwnerActor;
-        bombStartTime = PhotonNetwork.Time;
-        isCounting = true;
-        bombActive = true;
-
-        photonView.RPC(nameof(RPC_AssignBomb), RpcTarget.AllBuffered, newOwnerActor);
     }
 
     // --- LÓGICA DE GANADOR ---
